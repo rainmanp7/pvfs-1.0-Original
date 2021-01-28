@@ -1,5 +1,5 @@
 # pvfs-1.0-Original
- copyright (c) 1999 Rob Ross and Phil Carns, all rights reserved.
+ copyright (c) 1999 Rob Ross and Phil Carns and Christopher W. Brown, all rights reserved.
  
   Written by Rob Ross and Phil Carns, funded by Scyld Computing.
  
@@ -17,9 +17,10 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  
-  Contact:  Rob Ross    rbross@parl.clemson.edu
-            Phil Carns  pcarns@parl.clemson.edu
- 
+  Contact:  
+  Rob Ross    rbross@parl.clemson.edu
+  Phil Carns  pcarns@parl.clemson.edu
+ Chris Brown  muslimsoap@gmail.com
 
 Resurected 01-27-2021 By: rainmanp7 aka Christopher W. Brown.
 The Original Linux Parallel Virtual File System
