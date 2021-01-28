@@ -1,0 +1,169 @@
+/* Hey Emacs! This file is -*- nroff -*- source.
+ * 
+ * Copyright (c) 1996 Clemson University, All Rights Reserved.
+ * 2000 Argonne National Laboratory.
+ * Originally Written by Rob Ross.
+ *
+ * Parallel Architecture Research Laboratory, Clemson University
+ * Mathematics and Computer Science Division, Argonne National Laboratory
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ **Code** This Protected Resource Provided By = rainmanp7
+ * Contact:  
+ * Rob Ross			    rross@mcs.anl.gov
+ * Matt Cettei			mcettei@parl.eng.clemson.edu
+ * Chris Brown			muslimsoap@gmail.com
+ * Walt Ligon			walt@parl.clemson.edu
+ * Robert Latham		robl@mcs.anl.gov
+ * Neill Miller 		neillm@mcs.anl.gov
+ * Frank Shorter		fshorte@parl.clemson.edu
+ * Harish Ramachandran	rharish@parl.clemson.edu
+ * Dale Whitchurch		dalew@parl.clemson.edu
+ * Mike Speth			mspeth@parl.clemson.edu
+ * Brad Settlemyer		bradles@CLEMSON.EDU
+ */
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+#ifndef __PVFS_AUTOCONFIG_H
+#define __PVFS_AUTOCONFIG_H
+/* from config.h.top */
+
+/* Define to empty if the keyword does not work.  */
+#undef const
+
+/* Define as __inline if that's what the C compiler calls it.  */
+#undef inline
+
+/* Define as the return type of signal handlers (int or void).  */
+#undef RETSIGTYPE
+
+/* Define to `unsigned' if <sys/types.h> doesn't define.  */
+#undef size_t
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/* Define if you can safely include both <sys/time.h> and <time.h>.  */
+#undef TIME_WITH_SYS_TIME
+
+/* Define if you have the select function.  */
+#undef HAVE_SELECT
+
+/* Define if you have the <fcntl.h> header file.  */
+#undef HAVE_FCNTL_H
+
+/* Define if you have the <linux/devfs_fs_kernel.h> header file.  */
+#undef HAVE_LINUX_DEVFS_FS_KERNEL_H
+
+/* Define if you have the <linux/highmem.h> header file.  */
+#undef HAVE_LINUX_HIGHMEM_H
+
+/* Define if you have the <linux/iobuf.h> header file.  */
+#undef HAVE_LINUX_IOBUF_H
+
+/* Define if you have the <linux/locks.h> header file.  */
+#undef HAVE_LINUX_LOCKS_H
+
+/* Define if you have the <linux/pagemap.h> header file.  */
+#undef HAVE_LINUX_PAGEMAP_H
+
+/* Define if you have the <linux/posix_types.h> header file.  */
+#undef HAVE_LINUX_POSIX_TYPES_H
+
+/* Define if you have the <linux/sched.h> header file.  */
+#undef HAVE_LINUX_SCHED_H
+
+/* Define if you have the <linux/slab.h> header file.  */
+#undef HAVE_LINUX_SLAB_H
+
+/* Define if you have the <linux/smp_lock.h> header file.  */
+#undef HAVE_LINUX_SMP_LOCK_H
+
+/* Define if you have the <linux/tqueue.h> header file.  */
+#undef HAVE_LINUX_TQUEUE_H
+
+/* Define if you have the <linux/vmalloc.h> header file.  */
+#undef HAVE_LINUX_VMALLOC_H
+
+/* Define if you have the <malloc.h> header file.  */
+#undef HAVE_MALLOC_H
+
+/* Define if you have the <sys/ioctl.h> header file.  */
+#undef HAVE_SYS_IOCTL_H
+
+/* Define if you have the <sys/time.h> header file.  */
+#undef HAVE_SYS_TIME_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
+
+/* Define if you have the minipvfs library (-lminipvfs).  */
+#undef HAVE_LIBMINIPVFS
+
+/* Define if kiovec symbols are present */
+#undef HAVE_KIOVEC_SYMS
+
+/* Define if kiovec locking functions are present */
+#undef HAVE_KIOVEC_LOCK
+
+/* Define if PVFS kernel patch is applied */
+#undef HAVE_PVFS_KERNEL_PATCH
+
+/* Define if devfs is enabled */
+#undef HAVE_DEVFS_SYMS
+
+/* Define if linux struct task_struct has a pending member */
+#undef HAVE_LINUX_STRUCT_TASK_STRUCT_PENDING
+
+/* Define if pagelist member of kiobuf structure exists */
+#undef HAVE_PAGELIST
+
+/* Define if linux struct file_operations has an owner member */
+#undef HAVE_LINUX_STRUCT_FILE_OPERATIONS_OWNER
+
+/* Define if struct inode has an i_fop member */
+#undef HAVE_LINUX_STRUCT_INODE_I_FOP
+
+/* Define if struct address_space_operations is defined */
+#undef HAVE_LINUX_STRUCT_ADDRESS_SPACE_OPERATIONS
+
+/* Define if filldir function should take six parameters */
+#undef HAVE_LINUX_6_PARAM_FILLDIR
+
+/* Define if statfs member function of struct super_operations takes 3 params */
+#undef HAVE_LINUX_3_PARAM_SUPER_STATFS
+
+/* Define if fsync member function of struct file_operations takes 3 params */
+#undef HAVE_LINUX_3_PARAM_FILE_FSYNC
+
+/* Define if linux struct page has an offset member */
+#undef HAVE_LINUX_STRUCT_PAGE_OFFSET
+
+/* Define if DECLARE_WAIT_QUEUE_HEAD macro is available */
+#undef HAVE_DECLARE_WAIT_QUEUE_HEAD
+
+/* Define if DECLARE_WAITQUEUE macro is available */
+#undef HAVE_DECLARE_WAITQUEUE
+
+/* Define if DECLARE_MUTEX macro is available */
+#undef HAVE_DECLARE_MUTEX
+
+/* Define if kmap function or macro exists */
+#undef HAVE_KMAP
+
+/* Define if UnlockPage macro is available */
+#undef HAVE_UNLOCKPAGE
+
+/* from config.h.bot */
+#endif

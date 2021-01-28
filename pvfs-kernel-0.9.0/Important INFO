@@ -3,10 +3,14 @@
  * Copyright (c) 1996 Clemson University, All Rights Reserved.
  * 2000 Argonne National Laboratory.
  * Originally Written by Rob Ross.
- *
- * Parallel Architecture Research Laboratory, Clemson University
- * Mathematics and Computer Science Division, Argonne National Laboratory
- *
+ * 1992 The first Internet Socet Programming Evolved.
+ * 1994 Conceptual Programming started By Rob Ross
+ * 1996 Magor Programming Functions were in place.
+ * 1999 Public Release Started to take place.
+ * 2000 Pvfs2 Came into the picture.
+ * PVFS Parallel Architecture Research Laboratory, Clemson University
+ * PVFS2 Joint Venture = Mathematics and Computer Science Division, Argonne National Laboratory
+ * Back then The Argonne National Laboratory took it to hights ,that people say today are impossible.
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2 of the License,
@@ -34,12 +38,8 @@
  * Mike Speth			mspeth@parl.clemson.edu
  * Brad Settlemyer		bradles@CLEMSON.EDU
  */
-Resurected 01-27-2021 By: rainmanp7 aka Christopher W. Brown. The Original Linux Parallel Virtual File System
-
-PVFS 1.0-1.5 Linux Kernal Package.
-Linux Kernal 2.4 has everything required.
-Tested on Linux Kernal 2.2 - 2.4
-
+Rainmanp7 01-28-2021 I'm protecting this code for Historical Purposes.
+I will place this code to this current date under the GPL3 Public Freedom Lic.
 
 SUMMARY
 -------
