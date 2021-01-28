@@ -1,0 +1,321 @@
+
+SUMMARY
+-------
+This package implements a VFS interface to PVFS for the Linux 2.2
+kernel.  It has been tested on 2.2.12-16 and 2.2.16 at this time.
+
+THIS VERSION WILL NOT OPERATE CORRECTLY WITH VERSIONS OF PVFS EARLIER
+THAN 1.4.8.  There are new request types in the newer versions
+of PVFS which are utilized in this code.
+
+There are four components of note here.  The first is a kernel patch,
+which may optionally be applied to the kernel in order to allow us to
+more efficiently copy data between processes.  The second is the kernel
+module itself, which will provide the VFS functions and PVFS device
+necessary to access the system.  Third is the user space PVFS client
+daemon (pvfsd), which handles communication with the PVFS file system.
+Last is the mount.pvfs command, which handles mounting PVFS file systems.
+
+
+INSTALLATION & COMPILATION
+--------------------------
+The PVFS kernel module, PVFS client daemon (pvfsd), and PVFS mount
+binary must be built.  This is done simply by running "make" in the
+directory in which this README resides.
+
+Next the PVFS device file must be created.  This can be done with
+mknod, by "mknod /dev/pvfsd c 60 0".
+
+To obtain the best performance with the PVFS kernel module using Linux
+2.2, the rawio patch from Stephen Tweedie must have been applied to
+your kernel.  Many current distributions already include this patch.
+The 2.4 kernel includes the necessary functions by default.  The configure
+script will detect the presence or absence of rawio support.
+
+There are multiple versions of this patch for Linux 2.2.  Newer versions
+export some important symbols (e.g. alloc_kiovec) which our module
+will use.  Older versions did not export these symbols.  The configure
+script will detect older versions of the patch and will warn you; it is
+best to get a new version (newest at time of writing was
+raw-2.2.17.diff).
+
+The patch can be found at:
+ftp://ftp.uk.linux.org/pub/linux/sct/fs/raw-io/
+
+If you have used the PVFS kernel module before, you might have applied
+the PVFS kernel patch.  This patch is no longer needed IF you have a
+newer rawio patch.  We (the PVFS team) would prefer it if you would
+download the new rawio patch and use it WITHOUT the PVFS kernel patch.
+However, we will still operate correctly in the presence of the old PVFS
+patch.
+
+The kernel will of course need to be rebuilt after any patches are
+applied, as should the pvfs module.
+
+If you are installing on Redhat 7.0, please see the INSTALL file for
+notes on how to compile properly.
+
+USAGE
+-----
+There are three steps for mounting PVFS file systems:
+1) Load the PVFS module.  See the notes below on the module options.
+insmod pvfs
+
+2) Start the PVFS daemon.
+./pvfsd
+
+The pvfs daemon will detect if the device file is not created or if the
+pvfs module is not loaded and will print a message on stdout.
+
+3) Mount the PVFS file system (after creating the mountpoint).
+./mount.pvfs <manager>:<metadata_dir> <mountpoint>
+
+For example, I'm running a PVFS file system manager on a machine "hell"
+here.  The manager is storing metadata in /pvfs on machine "hell".  I
+want to mount the PVFS file system in the directory /foo on my local
+machine:
+
+./mount.pvfs hell:/pvfs /foo
+
+That's it.  You should be able to access files on the PVFS file system
+as usual.  When you want to unmount the file system, use "umount" as
+usual.
+
+NOTE (NEW):
+If you have a version of util-linux that is 2.10f or later, "mount" will
+automatically look for a fs-specific mount program in /sbin.  So, if you
+install mount.pvfs in /sbin (which make install does), you can put pvfs
+entries in /etc/fstab and use "mount" to mount them.
+
+
+MODULE OPTIONS
+--------------
+The module will accept an optional debug parameter, which will turn on
+logging of various types of debugging information.  This is specified on
+insmod (eg. "insmod pvfs debug=0x077").  The values of the various
+message types are described in pvfs_kernel_config.h.  Using 0x3ff will
+get pretty much all the messages.  By default you only get error
+messages.
+
+The maximum request size, in bytes, is settable via the "maxsz" parameter
+(eg.  "insmod pvfs maxsz=33554432").  By default this is 16MB.  This can
+be used to restrict the total amount of memory the PVFS module is
+willing to use.  All requests that are larger than this size will be
+split into one or more requests of the maximum size and one to request
+the remainder.
+
+The buffering technique used to move data between applications and the
+pvfsd is also selectable via the "buffer" parameter.  There are three
+valid options: static, dynamic, and mapped.  With the static technique,
+a static buffer is allocated when the module is loaded.  This buffer is
+the same size as the maximum request size.  With the dynamic approach, a
+new buffer is allocated each time a request is made and freed when the
+request finished.  With the mapped approach, the kernel patch is used to
+eliminate this use of extra memory, and the copy is eliminated.
+
+The mapped option is only available when the rawio patch is applied.
+The dynamic technique is the default.
+
+Note that all the options may be used at the same time, so that:
+insmod pvfs debug=0x3ff maxsz=33554432 buffer=mapped
+
+would enable more debugging output, set the maximum request size to
+32MB, and turn on the mapped buffering technique (if the patch were
+applied).
+
+Finally, a single-line message is printed to the kernel logs when the
+module is loaded, indicating the settings applied.
+
+
+LOGGING AND DEBUGGING
+---------------------
+There are two places where this system logs.  First, the kernel module
+will be spitting out logging information that will end up in your system
+logs.  Second, the pvfsd will be logging information into
+/tmp/pvfsdlog.XXXXXX.  Both of these sources are potentially useful for
+finding bugs.
+
+
+CAVEATS
+-------
+
+- symlinks and links aren't supported under PVFS and probably never will
+  be.
+
+- Multiple pvfsds should not be used at this time.
+
+- The pvfsd can potentially run out of open file descriptors if too
+  many files are opened simultaneously.  If it does application tasks
+  will have I/O operations fail.  I put in a workaround for this, but it
+  doesn't work yet <smile>.  There is a timeout mechanism built into the
+  pvfsd that will, after about a minute, get things back to sane.  I know
+  that isn't really a solution, but it's all you get for the moment.
+
+- The linux 2.4 support has not been tested on that many different
+  configurations, and as of this writing (12-14-2000) the official 2.4
+  release is not out yet.  The linux 2.4 support should be considered
+  experimental at this time.
+
+- If a mgr or iod dies, the pvfsd will hold on to the open FD until the
+  first instance of a failed attempt to use the FD.  This results in the
+  TCP connection lying around in FIN_WAIT2, which makes it impossible to
+  reasonably restart the daemons.  The appropriate action here is to try
+  an operation that uses the pvfsd; it will fail, the connection will be
+  closed, and the daemon can be restarted.
+
+
+FILES
+-----
+For your information, here's a summary of the files:
+
+README - this file
+INSTALL - notes on installation and potential warnings/errors
+Makefile.in - used by configure to create makefile for the PVFS module
+dir.c - VFS directory operations
+file.c - VFS file operations
+inode.c - VFS inode operations
+kmods - kernel modifications necessary for PVFS module
+ll_pvfs.c - implementation of low-level VFS operations
+ll_pvfs.h - header for low-level PVFS interface
+mount.pvfs.c - PVFS mount command
+pvfs_linux.h - header for linux-specific defines
+pvfs_mod.c - wrapper calls to define exported symbols for the module
+pvfs_mount.h - generic superblock info passed in by mount
+pvfs_v1_xfer.c - calls to implement VFS-like interface to PVFS v1.xx
+pvfs_v1_xfer.h - header for VFS-like interface calls
+pvfsd.c - pvfsd implementation
+pvfsd.h - pvfsd header
+pvfsdev.c - pvfsd device implementation
+pvfsdev.h - prototype for pvfsdev
+pvfs_kernel_config.h - configuration parameters for the PVFS kernel module
+config.h.in - used by configure to create config.h
+configure.in - used by autoconf to create configure script
+test/ - test code, probably useless to you
+
+
+TODO/IDEAS
+----------
+- retain a set of pvfsdev_seq_entry structures for use in pvfsdev_enqueue()
+  instead of kmalloc()ing each one on every entry into the enqueue function?
+
+- likewise for pvfsdev_upq_entry structures?
+
+- break pvfsdev_enqueue() up into a couple of functions; it's 400 lines or so
+  long now!
+
+- check for page_map() function in configure?
+
+* Correctly handle "out of FDs" condition, if possible.  (This may be
+  fixed now)
+
+- Perhaps modify pvfs_revalidate_inode so it uses a call with less
+  overhead than the getmeta call?
+
+- Modify pvfsdev so that "hints" will make it to all pvfsds, while other
+  requests are only sent out once(?)
+
+- Grab multiple dirent structures instead of one per call, cache them up
+  (probably in the VFS code).  Perhaps rename ll_pvfs_readdir to
+  ll_pvfs_getdents and pass the number of entries to read to this call,
+  performing caching at the level above it (again, VFS).
+
+- Perhaps modify v1 library to retry operations once in case of a
+  failure.  This should make manager restarts transparent.
+
+- HINT_UMOUNT to allow pvfsd to close all files for a file system
+  immediately on unmount(?)
+
+- Find a workaround for the double-stat problem we're seeing at the
+  manager.  Basically ll_pvfs_lookup() and ll_pvfs_getmeta() are both
+  called (lookup and revalidate) and both are slow.
+
+- Have mount.pvfs check the mount point for validity, print message
+  about checking status of pvfsd, module, and mgr in case of failure.
+  Can't get reasonable output from the sys_mount() to tell us if
+  anything else is wrong.
+
+- Develop tests for the number of parameters to filldir() and
+  pvfs_fsync(); replace all the extra uses of
+  HAVE_LINUX_STRUCT_FILE_OPERATIONS_OWNER (not critical)
+
+FIXES/WORKAROUNDS
+-----------------
+- 01/14/2001 - added checks on vmalloc() return value in pvfsdev.c,
+  renamed variables to make more sense.
+
+- 11/29/2000 - changed --with-pvfslib-dir to --with-libpvfs-dir; it was
+  driving me mad.
+
+- 11/20/2000 - added workaround in pvfs_v1_xfer to not talk to I/O
+  daemons when closing a file if we haven't previously communicated with
+  any of them.
+
+- 11/15/2000 - added Dan Nurmi's patch to allow options to mount.pvfs,
+  including port.
+
+- 11/14/2000 - added Dan Nurmi's patch to mount.pvfs to update
+  /etc/mtab.
+
+- 11/14/2000 - added option to configure to turn on support of kernel
+  patch (--with-pvfs-kpatch).  This is used instead of the __PVFS__XXX
+  stuff in the makefile before.
+
+- 11/13/2000 - modified file.c to use pgoff2loff(page->index) instead
+  of page->offset (which didn't exist on the kernel I was compiling for)
+
+  Not exactly sure which kernels this is right for.
+
+- 10/23/2000 - implemented statfs so that we can get file system
+  information back
+
+- 07/25/2000 - fixed pvfs_dentry_revalidate to return correct values
+  when the inode information is missing
+
+- 07/25/2000 - added some checks for smp and modversions configuration
+  in pvfs_kernel_config.h
+
+- -7/25/2000 - fixed maxsz module parameter so that the transfer buffer
+  size can be specified when the module is loaded
+
+- 03/14/2000 - ll_pvfs_create() now silently ignores the case where a
+  file exists when it is called.  This condition occurs when a parallel
+  application creates a new file.  One node will create the file between
+  the time another detects it is not there and the attempts to create
+  it.  This may break O_EXCL in some cases, but I think it is a
+  necessary evil.
+
+- 03/13/2000 - options available for maximum size and buffering
+  technique now.  Removed more unnecessary mandatory debugging info.
+  It is no longer necessary to patch your kernel to use the module.
+
+- 03/08/2000 - pvfsd now handles SIGPIPE correctly, catching and
+  resuming operation.  Would exit before.
+
+- 03/08/2000 - changed the default debugging mask to 0 to reduce the
+  logging I/O during extended operations.  See debugging option for
+  module (mentioned above) to turn on more debugging.
+
+- 03/08/2000 - fixed bug in which restarting an iod would leave bad
+  dentries in place.
+
+- 03/08/2000 - fixed bug in which empty superblock was locked on
+  failed mount attempts.
+
+- long ago - stat calls return "blocks" as if block size were 512
+  bytes.  Required for "du" to work.
+
+
+THANKS
+------
+Thanks to Scyld Computing for funding this work!  Thanks also to Brian
+Haymore of the University of Utah Center for High Performance Computing
+for preliminary testing of the code.
+
+Thanks go to the developers of the Coda linux VFS module; it was
+particularly helpful as a working example.
+
+Dan Nurmi contributed code to get /etc/mtab support working.  Very
+helpful.
+
+rainamnp7 resurected 23 year old code from across the planet.
+It was hidden and long -> erased over time.
