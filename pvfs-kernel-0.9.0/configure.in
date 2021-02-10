@@ -1,0 +1,382 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(pvfs_kernel_config.h)
+AC_CONFIG_HEADER(config.h)
+AC_CONFIG_AUX_DIR(scripts)
+
+dnl Checks for host type
+dnl Ensures we can compile on this OS
+AC_CANONICAL_HOST
+AC_MSG_CHECKING(whether we know how to compile for this OS)
+if test x$host_os != xlinux-gnu; then AC_MSG_ERROR($host_os not supported.)
+else AC_MSG_RESULT(yes)
+fi
+
+dnl Check if we need extra compiler flags for this arch
+dnl Not really sure what the right flags are for alphas
+AC_MSG_CHECKING(whether we need to add some compile flags for $host_cpu)
+if test x$host_cpu = xalphaev6; then 
+	dnl CFLAGS="-mno-fp-regs -ffixed-8 -mcpu=ev5 -Wa,-mev6 $CFLAGS"
+	dnl PVFS_ARCH_CFLAGS="-mno-fp-regs -ffixed-8 -mcpu=ev6 $CFLAGS"
+	PVFS_ARCH_CFLAGS="-fomit-frame-pointer -fno-strict-aliasing -pipe \
+	   -mno-fp-regs -ffixed-8 -mcpu=ev5 -Wa,-mev6"
+	AC_MSG_RESULT(yes)
+elif test x$host_cpu = xalphaev5; then
+	dnl PVFS_ARCH_CFLAGS="-mno-fp-regs -ffixed-8 -mcpu=ev5 $CFLAGS"
+	PVFS_ARCH_CFLAGS="-fomit-frame-pointer -fno-strict-aliasing -pipe \
+	   -mno-fp-regs -ffixed-8 -mcpu=ev5 -Wa,-mev5"
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+AC_SUBST(PVFS_ARCH_CFLAGS)
+CFLAGS="$PVFS_ARCH_CFLAGS $CFLAGS"
+
+dnl Check for uname, cut, grep, install, cc
+AC_PROG_INSTALL
+AC_PROG_CC
+AC_CHECK_PROG(HAVE_UNAME, uname, yes, no)
+AC_CHECK_PROG(HAVE_CUT, cut, yes, no)
+AC_CHECK_PROG(HAVE_GREP, grep, yes, no)
+
+dnl Check for kernel version; we know we're on Linux
+AC_MSG_CHECKING(whether we know how to compile for this kernel version)
+if test x$HAVE_UNAME = xno; then
+	AC_MSG_WARN(no uname; assuming version 2.2 (see INSTALL).)
+elif test x$HAVE_CUT = xno; then
+	AC_MSG_WARN(no cut; assuming version 2.2 (see INSTALL).)
+else
+	KERNEL_VERSION=`uname -r | cut --delimiter=. --fields=1,2`
+	case "$KERNEL_VERSION" in
+	2.2) AC_MSG_RESULT(yes) ;;
+	2.4) AC_MSG_RESULT(maybe) ;;
+	2.3) AC_MSG_RESULT(no); AC_MSG_ERROR(Linux 2.3 is not supported.) ;;
+	*)  AC_MSG_RESULT(no)
+	    AC_MSG_WARN(Linux version $KERNEL_VERSION not supported at this time.)
+	esac
+fi
+
+dnl Allow user to specify a directory with the PVFS library
+AC_ARG_WITH(libpvfs-dir,
+[  --with-libpvfs-dir      path to libminipvfs.a],
+if test x$withval = xyes; then
+	AC_MSG_ERROR(--with-libpvfs-dir must be given a pathname)
+else
+	echo adding $withval to library paths
+	[libpvfs_search_path="-L$withval $libpvfs_search_path"]
+fi
+)
+
+PVFS_LIBRARY_SEARCH_PATH="$libpvfs_search_path"
+
+AC_SUBST(PVFS_LIBRARY_SEARCH_PATH)
+
+LDFLAGS_OLD="$LDFLAGS"
+LDFLAGS="$LDFLAGS $libpvfs_search_path"
+
+dnl Checks for libraries.
+AC_CHECK_LIB(minipvfs, pvfs_open, ,
+  echo "configure: libminipvfs.a not found (see INSTALL)." 2>&1;
+  exit 1)
+LD_FLAGS="$LDFLAGS_OLD"
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h malloc.h sys/ioctl.h sys/time.h unistd.h linux/posix_types.h linux/slab.h linux/tqueue.h linux/vmalloc.h linux/pagemap.h linux/locks.h linux/smp_lock.h linux/highmem.h) 
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+dnl Checks for library functions.
+AC_PROG_GCC_TRADITIONAL
+AC_TYPE_SIGNAL
+AC_CHECK_FUNCS(select)
+
+dnl Checks for conflicts with compiler includes
+AC_MSG_CHECKING(for sane compiler includes)
+AC_TRY_COMPILE([
+#define __KERNEL__
+#include <linux/posix_types.h>
+#include <linux/sched.h>],
+[ int foo() { return 0; } ], AC_MSG_RESULT(yes); PVFS_WORKAROUND_CFLAGS="",
+AC_MSG_RESULT(no)
+AC_MSG_WARN(compiler includes could cause problems (see INSTALL).)
+PVFS_WORKAROUND_CFLAGS="-I/usr/include"
+)
+AC_SUBST(PVFS_WORKAROUND_CFLAGS)
+CFLAGS="$PVFS_WORKAROUND_CFLAGS $CFLAGS"
+
+dnl Check for rawio header file.
+dnl We use AC_CHECK_HEADERS here because it does the right thing with config.h
+AC_CHECK_HEADERS(linux/iobuf.h, HAVE_IOBUF_H="yes", HAVE_IOBUF_H="no")
+
+dnl Checks for kiovec (rawio) functions
+AC_MSG_CHECKING(for basic kiovec (rawio) functions in /proc/ksyms)
+RAWIO_KSYM=`grep " alloc_kiovec" /proc/ksyms`
+if test $? -eq 0; then
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_KIOVEC_SYMS, 1, Define if kiovec symbols are present)
+
+	dnl Checks for kiovec lock functions
+	AC_MSG_CHECKING(for kiovec lock/unlock functions in /proc/ksyms)
+	RAWIO2_KSYM=`grep " lock_kiovec" /proc/ksyms`
+	if test $? -eq 0; then
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_KIOVEC_LOCK, 1, Define if kiovec locking functions are present)
+	else
+		AC_MSG_RESULT(no)
+	fi
+else
+	AC_MSG_RESULT(no)
+	if test x$HAVE_IOBUF_H = xyes; then
+		AC_MSG_WARN(old rawio patch detected (see INSTALL).)
+	fi
+fi
+
+dnl Checks for PVFS kernel patch
+AC_MSG_CHECKING(for pvfs_map_userbuf in /proc/ksyms)
+PVFS_KSYM=`grep " pvfs_map_userbuf" /proc/ksyms`
+if test $? -eq 0; then
+	AC_MSG_RESULT(yes)
+	AC_MSG_WARN(PVFS kernel patch is deprecated (see INSTALL).)
+	AC_DEFINE(HAVE_PVFS_KERNEL_PATCH, 1, Define if PVFS kernel patch is applied)
+else
+	AC_MSG_RESULT(no)
+fi
+
+dnl Checks if devfs is enabled
+AC_CHECK_HEADERS(linux/devfs_fs_kernel.h,
+	AC_MSG_CHECKING(for devfs functions in /proc/ksyms)
+	PVFS_KSYM=`grep " devfs_register_chrdev" /proc/ksyms`
+	if test $? -eq 0; then
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_DEVFS_SYMS, 1, Define if devfs is enabled)
+	else
+		AC_MSG_RESULT(no)
+	fi
+,)
+
+dnl Checks for presence of pending member in task_struct structure
+AC_CHECK_HEADERS(linux/sched.h,
+	AC_MSG_CHECKING(for pending member in struct task_struct)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <linux/sched.h>
+	], [
+	struct task_struct task;
+	if ((void *) task.pending.head == 0) return;
+	], AC_MSG_RESULT(yes); AC_DEFINE(HAVE_LINUX_STRUCT_TASK_STRUCT_PENDING, 1,
+	Define if linux struct task_struct has a pending member), AC_MSG_RESULT(no))
+,)
+
+dnl Checks for presence of pagelist member in kiobuf structure
+if test x$HAVE_IOBUF_H = xyes; then
+	AC_MSG_CHECKING(for pagelist member in kiobuf structure)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <linux/iobuf.h>
+	], [
+	struct kiobuf mykiobuf;
+	unsigned long* tester;
+	mykiobuf.pagelist = tester;
+	], AC_MSG_RESULT(yes); AC_DEFINE(HAVE_PAGELIST, 1,
+	Define if pagelist member of kiobuf structure exists), AC_MSG_RESULT(no))
+fi
+
+
+dnl Here we check for all the changes to fs.h.  Arguably we could just
+dnl assume all these changes are there, but it's not that hard to check,
+dnl and as soon as I start assuming stuff like that something will break.
+dnl
+dnl AC_CHECK_HEADER doesn't bother to define anything for the header
+dnl
+dnl Checks for presence of owner member in file_operations structure
+AC_CHECK_HEADER(linux/fs.h,
+	AC_MSG_CHECKING(for owner member in struct file_operations)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <linux/fs.h>
+	], [
+	struct file_operations fops;
+	if ((void *) fops.owner == 0) return;
+	], AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_LINUX_STRUCT_FILE_OPERATIONS_OWNER, 1,
+	Define if linux struct file_operations has an owner member),
+	AC_MSG_RESULT(no))
+
+dnl Checks for presence of i_fop member in struct inode
+	AC_MSG_CHECKING(for i_fop member in struct inode)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <linux/fs.h>
+	], [
+	struct inode ino;
+	if ((void *)ino.i_fop == 0) return;
+	], AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_LINUX_STRUCT_INODE_I_FOP, 1,
+	Define if struct inode has an i_fop member),
+	AC_MSG_RESULT(no))
+
+dnl Checks for presence of struct address_space_operations in linux/fs.h
+	AC_MSG_CHECKING(for struct address_space_operations)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <linux/fs.h>
+	], [
+	struct address_space_operations ops;
+	], AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_LINUX_STRUCT_ADDRESS_SPACE_OPERATIONS, 1,
+	Define if struct address_space_operations is defined),
+	AC_MSG_RESULT(no))
+
+dnl Checks for sixth parameter to filldir
+	OLD_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS -Werror"
+	AC_MSG_CHECKING(for sixth parameter to filldir function)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <linux/fs.h>
+	int chkfn(void *, const char *, int, off_t, ino_t, unsigned);
+	int chkfn(void *de, const char *n, int l, off_t o, ino_t h, unsigned f)
+	{ return 0; }
+	], [
+	filldir_t fd;
+	fd = &chkfn;
+	], AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_LINUX_6_PARAM_FILLDIR, 1,
+	Define if filldir function should take six parameters),
+	AC_MSG_RESULT(no))
+	CFLAGS="$OLD_CFLAGS"
+
+dnl Checks for third parameter to statfs
+	OLD_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS -Werror"
+	AC_MSG_CHECKING(for third parameter to statfs super op)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <linux/fs.h>
+	int chkfn(struct super_block *sb, struct statfs *d, int s);
+	int chkfn(struct super_block *sb, struct statfs *d, int s) { return 0; }
+	], [
+	struct super_operations chkops;
+	chkops.statfs = chkfn;
+	], AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_LINUX_3_PARAM_SUPER_STATFS, 1,
+	Define if statfs member function of struct super_operations takes 3 params),
+	AC_MSG_RESULT(no))
+	CFLAGS="$OLD_CFLAGS"
+
+dnl Checks for third parameter to fsync
+	OLD_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS -Werror"
+	AC_MSG_CHECKING(for third parameter to fsync file op)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <linux/fs.h>
+	int chkfn(struct file *f, struct dentry *d, int s);
+	int chkfn(struct file *f, struct dentry *d, int s) { return 0; }
+	], [
+	struct file_operations chkops;
+	chkops.fsync = chkfn;
+	], AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_LINUX_3_PARAM_FILE_FSYNC, 1,
+	Define if fsync member function of struct file_operations takes 3 params),
+	AC_MSG_RESULT(no))
+	CFLAGS="$OLD_CFLAGS"
+,)
+
+dnl Checks for presence of offset member in page structure in mm.h
+AC_CHECK_HEADER(linux/mm.h,
+	AC_MSG_CHECKING(for offset member in struct page)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <linux/mm.h>
+	], [
+	struct page mypage;
+	mypage.offset = 0;
+	], AC_MSG_RESULT(yes); AC_DEFINE(HAVE_LINUX_STRUCT_PAGE_OFFSET, 1,
+	Define if linux struct page has an offset member), AC_MSG_RESULT(no))
+,)
+
+dnl Checks for definition of DECLARE_WAIT_QUEUE_HEAD in wait.h
+AC_CHECK_HEADER(linux/wait.h,
+	AC_MSG_CHECKING(for DECLARE_WAIT_QUEUE_HEAD macro in linux/wait.h)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <linux/wait.h>
+	#ifndef DECLARE_WAIT_QUEUE_HEAD
+	#error DECLARE_WAIT_QUEUE_HEAD not defined
+	#endif
+   ],,AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_DECLARE_WAIT_QUEUE_HEAD, 1, Define if DECLARE_WAIT_QUEUE_HEAD macro is available),
+	AC_MSG_RESULT(no))
+,)
+
+dnl Checks for definition of DECLARE_WAITQUEUE in wait.h
+AC_CHECK_HEADER(linux/wait.h,
+	AC_MSG_CHECKING(for DECLARE_WAITQUEUE macro in linux/wait.h)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <linux/wait.h>
+	#ifndef DECLARE_WAITQUEUE
+	#error DECLARE_WAITQUEUE not defined
+	#endif
+   ],,AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_DECLARE_WAITQUEUE, 1, Define if DECLARE_WAITQUEUE macro is available),
+	AC_MSG_RESULT(no))
+,)
+
+
+dnl Checks for definition of DECLARE_MUTEX in semaphore.h
+AC_CHECK_HEADER(asm/semaphore.h,
+	AC_MSG_CHECKING(for DECLARE_MUTEX macro in asm/semaphore.h)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <asm/semaphore.h>
+	#ifndef DECLARE_MUTEX
+	#error DECLARE_MUTEX not defined
+	#endif
+   ],,AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_DECLARE_MUTEX, 1, Define if DECLARE_MUTEX macro is available),
+	AC_MSG_RESULT(no))
+,)
+
+dnl Checks for presence of kmap function or macro in highmem.h
+AC_CHECK_HEADER(linux/mm.h,
+	AC_CHECK_HEADER(linux/highmem.h,
+		AC_MSG_CHECKING(for kmap function or macro)
+		AC_TRY_COMPILE([
+		#define __KERNEL__
+		#include <linux/mm.h>
+		#include <linux/highmem.h>
+		], [
+		struct page mypage;
+		char *buf;
+		buf = (char *) kmap(&mypage);
+		], AC_MSG_RESULT(yes); AC_DEFINE(HAVE_KMAP, 1,
+		Define if kmap function or macro exists), AC_MSG_RESULT(no))
+	,)
+,)
+
+dnl Checks for definition of UnlockPage in mm.h
+AC_CHECK_HEADER(linux/mm.h,
+	AC_MSG_CHECKING(for UnlockPage macro in mm.h)
+	AC_TRY_COMPILE([
+	#define __KERNEL__
+	#include <linux/mm.h>
+	#ifndef UnlockPage
+	#error UnlockPage not defined
+	#endif
+	],, AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_UNLOCKPAGE, 1, Define if UnlockPage macro is available), 
+	AC_MSG_RESULT(no))
+,)
+
+
+
+
+AC_OUTPUT(test/Makefile Makefile)
+
+

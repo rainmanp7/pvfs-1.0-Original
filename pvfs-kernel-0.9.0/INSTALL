@@ -1,0 +1,130 @@
+/* Hey Emacs! This file is -*- nroff -*- source.
+ * 
+ * Copyright (c) 1996 Clemson University, All Rights Reserved.
+ * 2000 Argonne National Laboratory.
+ * Originally Written by Rob Ross.
+ *
+ * Parallel Architecture Research Laboratory, Clemson University
+ * Mathematics and Computer Science Division, Argonne National Laboratory
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ **Code** This Protected Resource Provided By = rainmanp7
+ * Contact:  
+ * Rob Ross			    rross@mcs.anl.gov
+ * Matt Cettei			mcettei@parl.eng.clemson.edu
+ * Chris Brown			muslimsoap@gmail.com
+ * Walt Ligon			walt@parl.clemson.edu
+ * Robert Latham		robl@mcs.anl.gov
+ * Neill Miller 		neillm@mcs.anl.gov
+ * Frank Shorter		fshorte@parl.clemson.edu
+ * Harish Ramachandran	rharish@parl.clemson.edu
+ * Dale Whitchurch		dalew@parl.clemson.edu
+ * Mike Speth			mspeth@parl.clemson.edu
+ * Brad Settlemyer		bradles@CLEMSON.EDU
+ */
+ 
+To install, run:
+
+  ./configure; make
+
+Then maybe "make install"; up to you.  By default mount.pvfs is placed
+in /sbin and pvfsd in /usr/local/sbin.  I don't know how to place the
+module properly, so I leave that to you.
+
+Note to Redhat 7.0 users:
+--------------------------------------
+Redhat 7.0 ships with an extra version of gcc that must be used for
+compiling kernel code.  This version of gcc is called kgcc by Redhat.
+Before you run the configure script, please use the following command to
+set the default gcc for your session:
+
+for bash users:
+# export CC='kgcc'
+
+for tcsh users:
+> setenv CC 'kgcc'
+
+Also note that if you are using Redhat 7.0 and wish to compile
+pvfs-kernel against a different kernel version than the one that shipped
+with your installation, you need to modify the above command to indicate
+the correct include path:
+
+for bash users:
+# export CC='kgcc -I/usr/src/linux/include'
+
+for tcsh users:
+> setenv CC 'kgcc -I/usr/src/linux/include'
+
+---------------------------------------
+
+
+The configure script does a LOT of testing.  There are lots of options
+to the Linux kernel.  There are lots of changes between the two
+versions.  It's important that we figure out what is really going on.
+In general, if configure doesn't see some feature that you think should
+have been detected, it's probably because your header files are wrong
+(i.e. /usr/include/linux points to the wrong place).
+
+The configure/autoconf stuff isn't perfect; you might have to edit the
+Makefile to get things right.  Sorry!  Let me know if you have
+suggestions on how to make this better. -- Rob
+
+Common errors/warnings:
+
+1) error: libminipvfs.a not found.
+
+  It's not in a standard library path, or PVFS hasn't been installed.
+  If PVFS is installed, you just need to specify the location of your 
+  libminipvfs.a with:
+
+  ./configure --with-libpvfs-dir=/whateverdir/lib
+
+2) warning: compiler includes could cause problems.
+
+  It seems that the asm/posix_types.h that is provided with some gcc
+  versions conflicts with some of the internal Linux structures.  We
+  test for this in the configure process so we know it could happen
+  ahead of time, and we adjust our CFLAGS to try to work around the
+  problem.  The work-around does in fact avoid the problem on a number
+  of platforms; if it doesn't work for you, you might want to try a
+  different compiler (i.e. set your CC environement variable to point to
+  some other compiler, such as egcs or kgcc).
+
+3) warning: no XXX; assuming version 2.2.
+
+  One of the executables the tests use to determine the kernel version
+  wasn't present, so it just assumed that you have the right kernel.
+
+4) warning: PVFS kernel patch is deprecated.
+
+  With new rawio patches, it is no longer necessary (or desirable) to
+  apply the PVFS kernel patch.  All necessary PVFS functionality can
+  instead be built into our module.
+
+  This warning is simply to remind you that you don't have to patch any
+  more; everything will still operate normally.  See the README for more
+  information.
+
+5) warning: old rawio patch detected.
+
+  The configure script has detected that an old version of the rawio
+  patch was applied on this system.  This is indicated by the presence
+  of the linux/iobuf.h header file but the absence of the functions in
+  /proc/ksyms.
+
+  This warning is simply to remind you that there is a new rawio patch
+  that provides better functionality (i.e. you don't have to patch with
+  the PVFS patch too); everything will still operate normally.  See the
+  README for more information.

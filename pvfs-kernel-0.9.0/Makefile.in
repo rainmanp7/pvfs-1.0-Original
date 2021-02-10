@@ -1,0 +1,102 @@
+# Hey Emacs! This file is -*- nroff -*- source.
+# 
+# Copyright (c) 1996 Clemson University, All Rights Reserved.
+# 2000 Argonne National Laboratory.
+# Originally Written by Rob Ross.
+#
+# Parallel Architecture Research Laboratory, Clemson University
+# Mathematics and Computer Science Division, Argonne National Laboratory
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published
+# by the Free Software Foundation; either version 2 of the License,
+# or any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#**Code** This Protected Resource Provided By = rainmanp7
+#* Contact:  
+#* Rob Ross			    rross@mcs.anl.gov
+#* Matt Cettei			mcettei@parl.eng.clemson.edu
+#* Chris Brown			muslimsoap@gmail.com
+#* Walt Ligon			walt@parl.clemson.edu
+#* Robert Latham		robl@mcs.anl.gov
+#* Neill Miller 		neillm@mcs.anl.gov
+#* Frank Shorter		fshorte@parl.clemson.edu
+#* Harish Ramachandran	rharish@parl.clemson.edu
+#* Dale Whitchurch		dalew@parl.clemson.edu
+#* Mike Speth			mspeth@parl.clemson.edu
+#* Brad Settlemyer		bradles@CLEMSON.EDU
+#
+# NOTE: MUST HAVE -O2 FOR INLINES TO BE USED!!!
+#
+srcdir=@srcdir@
+VPATH=@srcdir@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+PVFS_LIBRARY_SEARCH_PATH=@PVFS_LIBRARY_SEARCH_PATH@
+
+INSTALL=install -c
+
+INCLUDES=-I. -Ipvfs-includes -I../pvfs/include
+CFLAGS=-g -O2 -Wall -Winline -Wstrict-prototypes -DLINUX \
+	$(INCLUDES) @PVFS_ARCH_CFLAGS@
+
+MODFLAGS=@PVFS_WORKAROUND_CFLAGS@ -O2 -Wall -Winline \
+	-Wstrict-prototypes -DMODULE -D__KERNEL__ \
+	-DLINUX $(INCLUDES) @PVFS_ARCH_CFLAGS@
+LD=gcc 
+CC=@CC@
+MODLD=ld
+
+all: pvfs.o pvfs_v1_xfer.o pvfsd mount.pvfs
+
+mount.pvfs: mount.pvfs.c
+
+pvfsd: pvfsd.o pvfs_v1_xfer.o pvfs_kernel_config.h
+	$(LD) -o $@ pvfsd.o pvfs_v1_xfer.o \
+	$(PVFS_LIBRARY_SEARCH_PATH) -lminipvfs
+
+pvfs.o: pvfs_mod.o inode.o file.o dir.o ll_pvfs.o pvfsdev.o \
+	pvfs_bufmap.o
+	$(MODLD) -r -o $@ pvfs_mod.o inode.o file.o dir.o \
+	ll_pvfs.o pvfsdev.o pvfs_bufmap.o
+
+pvfs_v1_xfer.o: pvfs_v1_xfer.c ll_pvfs.h
+
+ll_pvfs.o: ll_pvfs.c ll_pvfs.h
+	$(CC) $(MODFLAGS) -c $(srcdir)/ll_pvfs.c -o $@
+
+pvfs_mod.o: pvfs_mod.c
+	$(CC) $(MODFLAGS) -c $(srcdir)/pvfs_mod.c -o $@
+
+inode.o: inode.c
+	$(CC) $(MODFLAGS) -c $(srcdir)/inode.c -o $@
+
+file.o: file.c pvfs_kernel_config.h
+	$(CC) $(MODFLAGS) -c $(srcdir)/file.c -o $@
+
+dir.o: dir.c
+	$(CC) $(MODFLAGS) -c $(srcdir)/dir.c -o $@
+
+pvfs_bufmap.o: pvfs_bufmap.c
+	$(CC) $(MODFLAGS) -c $(srcdir)/pvfs_bufmap.c -o $@
+
+pvfsdev.o: pvfsdev.c
+	$(CC) $(MODFLAGS) -c $(srcdir)/pvfsdev.c -o $@
+
+clean::
+	rm -f *.o pvfsd mount.pvfs config.cache
+
+install::
+	${INSTALL} -d /sbin/
+	${INSTALL} mount.pvfs /sbin/
+	${INSTALL} -d @sbindir@
+	${INSTALL} pvfsd @sbindir@
+	@echo NOTE: pvfs.o must be installed by hand!
