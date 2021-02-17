@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# description: iod is the PVFS I/O daemon
+#
+# chkconfig: 345 35 55
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+[ -f /usr/pvfs/bin/iod ] || exit 0
+
+# See how we were called.
+case "$1" in
+  start)
+	echo -n "Starting PVFS I/O daemon: "
+	daemon /usr/pvfs/bin/iod
+	echo
+	touch /var/lock/subsys/iod
+	;;
+  stop)
+	echo -n "Stopping PVFS I/O daemon: "
+	killproc iod
+	echo
+	rm -f /var/lock/subsys/iod
+	;;
+  status)
+        status iod
+	;;
+  restart)
+	$0 stop
+	$0 start
+	;;
+  *)
+	echo "Usage: $0 {start|stop|status|restart}"
+	exit 1
+esac
+
+exit 0
+

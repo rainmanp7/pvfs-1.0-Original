@@ -1,0 +1,71 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is copyright (c) 1997 Clemson University.
+.\"
+.\" Written by Rob Ross and Matt Cettei.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"           Matt Cettei mcettei@parl.eng.clemson.edu
+.\" 
+.TH PVFS_DUP 3 "2 December 1997" "PVFS calls"
+.SH NAME
+pvfs_dup, pvfs_dup2 \- duplicate a file descriptor
+.SH SYNOPSIS
+.nf
+.B #include <unistd.h>
+.sp
+.BI "int pvfs_dup(int " oldfd );
+.BI "int pvfs_dup2(int " oldfd ", int " newfd );
+.fi
+.SH DESCRIPTION
+.BR pvfs_dup " and " pvfs_dup2
+create a copy of the file descriptor
+.IR oldfd .
+
+The old and new descriptors may be used interchangeably. They share
+locks, file position pointers and flags; for example, if the file
+position is modified by using
+.B pvfs_lseek
+on one of the descriptors, the position is also changed for the other.
+
+
+.B pvfs_dup
+uses the lowest-numbered unused descriptor for the new descriptor.
+
+.B pvfs_dup2
+.RI "makes " newfd " be the copy of " oldfd ", closing " newfd
+first if necessary.
+.SH "RETURN VALUE"
+.BR pvfs_dup " and " pvfs_dup2
+return the new descriptor, or \-1 if an error occurred (in which case,
+.I errno
+is set appropriately).  See the 
+.BR dup "(2)
+manpage for more information on 
+.I errno
+values in the event of an error.
+.SH "CONFORMING TO"
+Nothing
+.SH "SEE ALSO"
+.BR " pvfs_open "(3), " dup "(2).
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on
+.B dup
+manpage by Drew Eckhardt, Michael Haardt, and Ian Jackson.

@@ -1,0 +1,282 @@
+#!/usr/bin/perl
+# Script to setup iodtab and pvfsdir files for PVFS
+# This file creates both .iodtab and .pvfsdir files and makes sure all
+# user entries are correct before creating them.
+#
+# $Log: mkmgrconf,v $
+# Revision 1.2  2000/12/18 16:52:48  rbross
+# Dunno.
+#
+# Revision 1.1  2000/12/18 16:27:18  rbross
+# moved mkiodtab to mkmgrconf
+#
+# Revision 1.1.1.1  1999/08/10 17:11:31  rbross
+# Original 1.3.3 sources
+#
+
+# ***********************************
+# initialization
+# ***********************************
+$rootdir = "/";
+print("This script will make the .iodtab and .pvfsdir files\nin the metadata directory of a PVFS file system.\n");
+if ($< != 0) {
+	print("This script should be run as root.\n");
+	exit(-1);
+}	
+print("\n");
+#setup STDOUT to flush (unbuffered) -- (confusing, I know!)
+select STDOUT; $| = 1;
+
+# ***********************************
+# get root directory
+# ***********************************
+print("Enter the root directory (metadata directory):\n");
+$rootdir = <STDIN>;
+chop($rootdir);
+
+# ***********************************
+# verify directory exists, if not ask to create
+# ***********************************
+if (!(opendir(DIR, $rootdir))) {
+	print("$rootdir does not exist\n");
+	print("Shall we create it?(y or n)\n");
+	$resp = <STDIN>;
+	chop($resp);
+	# if not create, exit program with error
+	if ($resp !~ /^y$/) {
+		print("Goodbye\n");
+		exit(-1);
+	}	
+	# open new directory with standard permissions (755)
+	@temp = split(//,755);
+	$temp = $temp[2]*1 + $temp[1]*8 + $temp[0]*64;
+	if (!mkdir($rootdir, $temp)) {
+		print("$rootdir: mkdir failed (mode = 755)");
+		exit(-1);
+	}
+}	
+
+# ***********************************
+# get uid
+# ***********************************
+# All sections from here on use this while(1) which breaks only when the
+# user enters in a correct response (e.g. valid user id).
+while (1) {
+	print("Enter the user id of directory: \n");
+	$user = <STDIN>;
+	chop($user);
+	# verify uid
+	if ($user =~ /^[0-9]+$/) {
+		if ((@temp = getpwuid($user)) == NULL) {
+			print("$user: Invalid user id...try again\n");
+			next;
+		}
+	}
+	else {
+		if ((@temp = getpwnam($user)) == NULL) {
+			print("$user: Invalid user id...try again\n");
+			next;
+		}
+	}
+	last;
+}
+$uid = $temp[2];
+
+# ***********************************
+# get gid
+# ***********************************
+while (1) {
+	print("Enter the group id of directory: \n");
+	$group = <STDIN>;
+	chop($group);
+	# verify gid
+	if ($group =~ /^[0-9]+$/) {
+		if ((@temp = getgrgid($group)) == NULL) {
+			print("$group: Invalid group id...try again\n");
+			next;
+		}
+	}
+	else {
+		if ((@temp = getgrnam($group)) == NULL) {
+			print("$group: Invalid group id...try again\n");
+			next;
+		}
+	}
+	last;
+}
+$gid = $temp[2];
+
+# ***********************************
+# get mode
+# ***********************************
+while(1) {
+	print("Enter the mode of the root directory: \n");
+	$mode = <STDIN>;
+	chop($mode);
+	# verify valid mode
+	if ($mode !~ /^[0-7]+$/) {
+		print("$mode: Invalid mode...try again\n");
+		next;
+	}
+	$omode = oct($mode);
+	if ($omode & ~(oct(777))) {
+		print("$mode: Invalid mode...try again\n");
+		next;
+	}
+	last;
+}
+# make it a directory mode
+$omode |= 0040000;
+
+# ***********************************
+# get hostname
+# ***********************************
+while(1) {
+	print("Enter the hostname that will run the manager: \n");
+	$host = <STDIN>;
+	chop($host);
+	print("Searching for host...");
+	if ((@temp = gethostbyname($host)) == NULL) {
+		print("\n$host: Invalid hostname...try again\n");
+		next;
+	}
+	print("success\n");
+	last;
+}
+
+# ***********************************
+# get manager port number
+# ***********************************
+while(1) {
+	print("Enter the port number on the host for manager: \n");
+	print("(Port number 3000 is the default)\n");
+	$port = <STDIN>;
+	chop($port);
+	if ($port == NULL) {
+		$port = 3000;
+		last;
+	}
+	if ($port < 1024 || $port >= 65536 || $port !~ /^[0-9]+$/) {
+		print("$port: Invalid port number...try again\n");
+		next;
+	}	
+	last;
+}
+
+# ***********************************
+# get I/O node locations
+# ***********************************
+# LOOP label defined for nested next command below
+LOOP: while(1) {
+	print("Enter the I/O nodes: (can use form node1, node2, ... or\n");
+	print("nodename{#-#,#,#})\n");
+	$inputline = <STDIN>;
+	chop($inputline);
+	# parse input (commas first, then brackets)
+	@parse = split(/[, ]+/, $inputline);
+	$numinodes = 0;
+	for($i=0; $parse[$i] !~ /^$/;$i++) {
+		# expand parsed input that contains brackets
+		if ($parse[$i] =~ /{/) {
+			@arrayline = split(/[{}, ]+/, $parse[$i]);
+			$prefix = @arrayline[0];
+			$count = @arrayline - 1;
+			for ($j = 1; $j <= $count; $j++) { 
+				if (@arrayline[$j] =~ /-/) {
+					@temparray = split(/-/, $arrayline[$j]);
+					for ($k = @temparray[0]; $k <= @temparray[1]; $k++) {
+						@inodes[$numinodes] = $arrayline[0].$k;
+						$numinodes++;
+					}	
+				} else { 
+					@inodes[$numinodes] = $arrayline[0].$arrayline[$j];
+					$numinodes++;
+				}	
+			}
+		}
+		else {
+			@inodes[$numinodes] = $parse[$i];
+			$numinodes++;
+		}
+	}
+
+	# make sure i/o nodes exist
+	# may need to flush here? (what is flush command in perl?)
+	print("Searching for hosts...");
+	$fail = 0;
+	for($i=0;$inodes[$i] !~ /^$/;$i++) {
+		if ((@temp = gethostbyname($inodes[$i])) == NULL) {
+			@badhosts[$fail] = $inodes[$i];
+			$fail++;
+		}
+	}
+	# if any of the lookups failed, try again
+	if ($fail) {
+		print("\nInvalid I/O node(s): @badhosts...try again\n");
+		next LOOP;
+	}
+	print("success\n");
+	last;
+}
+print("I/O nodes: @inodes\n");
+
+# ***********************************
+# get iod port number
+# ***********************************
+while(1) {
+	print("Enter the port number for the iods: \n");
+	print("(Port number 7000 is the default)\n");
+	$nodeport = <STDIN>;
+	chop($nodeport);
+	if ($nodeport == NULL) {
+		$nodeport = 7000;
+		last;
+	}
+	if ($nodeport < 1024 || $nodeport >= 65536 || $nodeport !~ /^[0-9]+$/) {
+		print("$port: Invalid port number...try again\n");
+		next;
+	}	
+	last;
+}
+
+# ***********************************
+# Write to .iodtab
+# ***********************************
+$iodtab = ">".$rootdir."/.iodtab";
+if (!open(IODTAB, "$iodtab")) {
+	print("$iodtab: open error\n");
+	exit(-1);
+}
+print IODTAB ("# .iodtab\n");
+$date = localtime(time);
+print IODTAB ("# Created by mkiodtab - $date\n");
+print IODTAB ("#\n");
+print IODTAB ("# node:port #\n");
+$count = @inodes;
+for ($i = 0; $i < $count; $i++) {
+	print IODTAB ("@inodes[$i]:$nodeport\n");
+}	
+close(IODTAB);
+chmod(0755, $rootdir."/.iodtab");
+
+# Write to .pvfsdir
+$pvfsdir = ">".$rootdir."/.pvfsdir";
+if (!open(PVFSDIR, "$pvfsdir")) {
+	print("$pvfsdir: open error\n");
+	exit(-1);
+}
+# get inode from stat structure
+$inode = (stat(PVFSDIR))[1];
+print PVFSDIR ("$inode\n");
+print PVFSDIR ("$uid\n");
+print PVFSDIR ("$gid\n");
+printf PVFSDIR ("%07o\n", $omode);
+print PVFSDIR ("$port\n");
+print PVFSDIR ("$host\n");
+print PVFSDIR ("$rootdir\n");
+print PVFSDIR ("\/\n");
+close(PVFSDIR);
+chmod(0755, $rootdir."/.pvfsdir");
+
+# finished
+print ("Done!\n");

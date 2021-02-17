@@ -1,0 +1,98 @@
+01/15/2001
+----------
+- fixed bug in mgrcomm.c which would cause first request to a restarted
+  manager to fail
+
+[lazy bug fixers didn't log changes for a bit]
+
+10/27/2000
+----------
+- most instances of syscall() are removed; there are still some left to
+  deal with though
+- libminipvfs is now installed along with everything else
+- libpvfs is no longer created
+- struct pvfs_stat changed to struct pvfs_filestat to fix naming oddity
+  that has been in lib forever (pvfs_ostat()).
+
+6/16/2000
+----------
+- manager and iod both now include linux/fs.h.  This mainly provides a
+  reasonable value for NR_OPEN, the max number of open files.  This
+  inclusion can be toggled off with __FS_H_IS_OK__ in config.h.  --Phil
+
+03/29/2000
+----------
+- cut down manager default logging substantially.
+- manager now includes -r option for using a random base node number
+  instead of 0 for default.
+- manager now uses SO_REUSEADDR to enable restarting more quickly.  iod
+  uses this too.  bind() problems should be gone.
+- Configuration defines are better documented in pvfs_config.h:
+  __ALPHA__ for Alpha processors (still not quite there),
+  LARGE_FILE_SUPPORT for >2GB files (also still not quite there),
+  __USE_SENDFILE__ for using sendfile() on the iod (not faster?).
+- sendfile() support is now added to the iod.
+- TCP_CORK is available on iods and in library (not working in iod?
+  undefined at top of jobs.c to prevent its use for now).
+- library sleeps and retries connect() when an EAGAIN error is
+  encountered (gracefully handles no-sockets problem)
+- big memory leak in manager fixed
+
+01/31/2000
+----------
+- all metadata reading and writing operations are now in the mgr/meta
+  directory and are handled by the manager; applications only see what
+  is passed back to them through pvfs calls.
+
+01/14/2000
+----------
+- integrated filter_dirents() into the manager to pull reserved names
+  out of getdents output.  This eliminates the need to check for these
+  names on the client side (which is good, since the VFS code doesn't do
+  that)
+- now using resv_name() check in the check_pvfs() call, so it no longer
+  incorrectly detects names as reserved when they aren't (eg.
+  .pvfsdir.saveme).
+
+01/13/2000
+----------
+- removed uncalled functions
+- added resv_name.c in shared directory
+- modified mgr to use resv_name for all incoming names, return ENOENT if
+  name is reserved
+- took out __USE_NFS__ code
+- fixed bug in pvfs_rename which was causing segfaults
+- fixed bug in put_dmeta() which was causing the .pvfsdir corruption
+
+11/08/1999
+----------
+- added pvfstab man page
+- updated User Guide to discuss pvfstab file and changes WRT NFS
+- fixed bug in statfs() call which was causing xterms, vi, tcsh, etc. to
+  fail
+
+10/21/1999
+----------
+- added sample pvfstab file
+- modified pvfs spec file; copies pvfstab into place, tags configs files
+  appropriately (so rpm doesn't overwrite on package update)
+
+10/20/1999 (v1.4.2-pre5)
+------------------------
+- now mostly working without NFS
+- lack of chdir() and getcwd() support (along with no NFS) breaks:
+	* rm -rf <dir> (rm tries to chdir() into directories)
+	* mv <dir> (mv tries to chdir() into directories too)
+- other miscellaneous resulting problems:
+	* no wildcards (unless you start a shell with LD_PRELOAD set)
+	* if you do start the shell, vi doesn't work right (?)
+
+TODO
+----
+- maybe do a chdir() and a getcwd() wrapper?
+- sendfile() in iod/jobs.c:do_access() for read accesses w/linux2.2
+
+OTHER KNOWN BUGS
+----------------
+- files accessed with stdio calls don't get final buffers written if not
+  explicitly closed (?)

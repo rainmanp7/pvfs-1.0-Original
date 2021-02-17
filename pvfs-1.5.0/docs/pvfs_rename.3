@@ -1,0 +1,81 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is copyright (c) 1997 Clemson University.
+.\"
+.\" Written by Rob Ross and Matt Cettei.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"           Matt Cettei mcettei@parl.eng.clemson.edu
+.\" 
+.TH PVFS_RENAME 3 "2 December 1997" "PVFS calls"
+.SH NAME
+pvfs_rename \- change the name or location of a file
+.SH SYNOPSIS
+.B #include <unistd.h>
+.sp
+.BI "int pvfs_rename(const char *" oldpath ", const char *" newpath );
+.SH DESCRIPTION
+.B pvfs_rename
+renames a file, moving it between directories if required.  If the file
+is not a PVFS file, the
+.B rename
+system call is used to perform the requested operation.
+
+If
+.I newpath
+already exists it will be unlinked before
+.I oldpath
+is moved.  This is
+.I not
+consistent with standard
+.B rename
+operation, and may be corrected at a later time.
+
+.SH "RETURN VALUE"
+On success, zero is returned.  On error, \-1 is returned, and
+.I errno
+is set appropriately.  See the 
+.BR rename "(2)
+manpage for information on
+.I errno
+values in the presence of errors.
+.SH "CONFORMING TO"
+Nothing
+.SH "SEE ALSO"
+.BR link "(2), " unlink "(2), " symlink "(2), " mv "(1), " link (8).
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on 
+.B rename
+manpage by Drew Eckhardt, Michael Haardt, and Ian Jackson
+.SH BUGS
+Problems may still exist with respect to renaming files when 
+.I newpath
+already exists and is open by some process.
+
+If
+.I newpath
+exists but the operation fails for some reason or the system crashes,
+.B pvfs_rename
+will probably have deleted newpath.
+
+Using
+.B pvfs_rename
+to move files between PVFS and other file systems is also not currently
+supported.

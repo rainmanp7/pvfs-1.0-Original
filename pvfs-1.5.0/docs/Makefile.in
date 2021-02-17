@@ -1,0 +1,28 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+
+MANDIR = @mandir@
+
+MANDIR3 = $(MANDIR)/man3
+MANDIR5 = $(MANDIR)/man5
+MANDIR8 = $(MANDIR)/man8
+
+all: docs
+
+install:: docs
+
+docs::
+	if [ ! -d $(MANDIR3) ]; then install -m 755 -d $(MANDIR3); fi
+	cp *.3 $(MANDIR3)
+	ln -f $(MANDIR3)/pvfs_chmod.3 $(MANDIR3)/pvfs_fchmod.3
+	ln -f $(MANDIR3)/pvfs_chown.3 $(MANDIR3)/pvfs_fchown.3
+	ln -f $(MANDIR3)/pvfs_dup.3 $(MANDIR3)/pvfs_dup2.3
+	ln -f $(MANDIR3)/pvfs_stat.3 $(MANDIR3)/pvfs_fstat.3
+	ln -f $(MANDIR3)/pvfs_stat.3 $(MANDIR3)/pvfs_lstat.3
+
+	if [ ! -d $(MANDIR5) ]; then install -m 755 -d $(MANDIR5); fi
+	cp *.5 $(MANDIR5)
+
+	if [ ! -d $(MANDIR8) ]; then install -m 755 -d $(MANDIR8); fi
+	cp *.8 $(MANDIR8)

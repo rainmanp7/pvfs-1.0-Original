@@ -1,0 +1,44 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+# The next two lines keep make from checking wacked out implicit rules
+.SUFFIXES:
+.SUFFIXES: .c .o .h
+
+CFLAGS = -Wall -I ../include -I ../shared -I . @CFLAGS@
+
+LD = gcc
+CC = @CC@
+
+IODOBJS = iod.o flist.o jlist.o alist.o sockinfo.o jobs.o \
+	config.o
+
+SHROBJS = ../shared/sockio.o ../shared/llist.o ../shared/sockset.o \
+	../shared/dfd_set.o
+
+all : iod
+
+iod-static : $(IODOBJS) shared-objs
+	$(LD) $(LDFLAGS) $(IODOBJS) $(SHROBJS) -static -o iod-static
+
+iod : $(IODOBJS) shared-objs
+	$(LD) $(LDFLAGS) $(IODOBJS) $(SHROBJS) -o iod
+
+shared-objs::
+	make -C ../shared all
+
+clean::
+	rm -rf $(IODOBJS) iod
+
+#### DEPENDENCIES ####
+build_job.c : build_job.h
+flist.o: flist.h ../shared/llist.h
+jlist.o: jlist.h alist.h ../shared/llist.h
+alist.o: alist.h flist.h ../shared/llist.h
+jobs.o: jobs.h iod.h ../include/req.h jlist.h alist.h flist.h \
+	../include/debug.h  ../shared/sockset.h ../shared/sockio.h  \
+	../include/minmax.h ../shared/llist.h ../include/meta.h \
+	../include/req.h
+iod.o: flist.h jlist.h alist.h iod.h ../include/req.h ../shared/sockset.h \
+	../shared/sockio.h ../include/debug.h ../shared/llist.h \
+	../include/meta.h ../include/minmax.h

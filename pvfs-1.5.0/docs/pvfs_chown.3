@@ -1,0 +1,74 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is copyright (c) 1997 Clemson University.
+.\"
+.\" Written by Rob Ross and Matt Cettei.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"           Matt Cettei mcettei@parl.eng.clemson.edu
+.\" 
+.TH PVFS_CHOWN 3 "2 December 1997" "PVFS calls"
+.SH NAME
+pvfs_chown, pvfs_fchown \- change ownership of a file
+.SH SYNOPSIS
+.B #include <sys/types.h>
+.br
+.B #include <unistd.h>
+.sp
+.BI "int pvfs_chown(const char *" path ", uid_t " owner ", gid_t " group );
+.br
+.BI "int pvfs_fchown(int " fd ", uid_t " owner ", gid_t " group );
+.SH DESCRIPTION
+The owner of the file specified by
+.I path
+or by
+.I fd
+is changed.  Only the super-user may change the owner of a file.  The owner
+of a file may change the group of the file to any group of which that owner
+is a member.  The super-user may change the group arbitrarily.  For
+files that are not on PVFS file systems, the 
+.B chown
+system call is used instead to perform the requested operation.
+
+If the
+.I owner
+or
+.I group
+is specified as \-1, then that ID is not changed.
+.SH "RETURN VALUE"
+On success, zero is returned.  On error, \-1 is returned, and
+.I errno
+is set appropriately. See the 
+.BR chown "(2)
+manpage for information on 
+.I errno
+values in the event of an error.
+
+.SH "CONFORMING TO"
+Nothing
+.SH "SEE ALSO"
+.BR pvfs_chmod "(3), " chown "(2)"
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on 
+.B chown
+manpage by Drew Eckhardt
+
+.SH BUGS
+Maybe.

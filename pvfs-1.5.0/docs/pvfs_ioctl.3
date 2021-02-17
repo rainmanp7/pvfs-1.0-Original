@@ -1,0 +1,159 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is copyright (c) 1997 Clemson University.
+.\"
+.\" Written by Rob Ross and Matt Cettei.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"           Matt Cettei mcettei@parl.eng.clemson.edu
+.\" 
+.TH PVFS_IOCTL 3 "1 December 1997" "PVFS calls"
+.SH NAME
+pvfs_ioctl \- control PVFS files
+.SH SYNOPSIS
+.B #include <sys/ioctl.h>
+.B #include <pvfs.h>
+.sp
+.BI "int pvfs_ioctl(int " d ", int " request ", ...)"
+.sp
+[The "third" argument under PVFS is defined as \fBvoid *\fIdata\fR, and will
+be so named for this discussion.]
+
+.SH DESCRIPTION
+The
+.B pvfs_ioctl
+function manipulates the underlying parameters of PVFS files.  In
+particular, metadata and partition values can be examined and
+manipulated with
+.B pvfs_ioctl
+requests.  The argument
+.I d
+must be an open file descriptor.
+
+A pvfs_ioctl
+.I request
+has encoded in it whether the argument is an
+.I in
+parameter or
+.I out
+parameter, and the size of the argument
+.I argp
+in bytes.  Macros and defines used in specifying a
+.B pvfs_ioctl
+.I request
+are located in the files
+.IR <desc.h> " and " <meta.h> .
+
+.I request
+for PVFS should be one of the following:
+.TP
+.B GETPART
+Reads partition information for an open file and stores it in the
+region pointed to by 
+.I data
+
+In this case
+.I data
+should point to a 
+.I fpart
+structure, which is declared as follows:
+.PP
+.RS
+.nf
+struct fpart
+{
+	int offset; /* starting position of partition relative to
+		start of file */
+	int gsize;
+	int stride; /* distance in bytes from beginning one group
+		to beginning of the next */
+	int gstride;
+	int ngroups;
+}
+.fi
+.RE
+.PP
+Note that 
+.I gstride 
+and
+.I ngroups
+are not used unless a group (collective I/O) open is in effect.
+.TP
+.B SETPART
+Sets the partition information for an open file using the partition
+information pointed to by 
+.I data
+(which in this case also points to a 
+.I fpart
+structure)
+.TP
+.B GETMETA
+Reads the metadata for an open file and stores it in the region pointed
+to by 
+.I data
+In this case
+should point to a 
+.I pvfs_filestat
+structure, which is declared as follows:
+.PP
+.RS
+.nf
+struct pvfs_filestat
+{
+	int base; /* starting I/O node for file */
+	int pcount; /* number of partitions (nodes) across which
+		file is striped */
+	int ssize; /* stripe size (on each node) */
+	int soff;  /* stripe offset */
+	int bsize;
+}
+.fi
+.RE
+.PP
+Note that 
+.I bsize 
+is not used for anything currently.
+.PP
+
+.SH "RETURN VALUE"
+On success, zero is returned.  On error, \-1 is returned, and
+.I errno
+is set appropriately.  See the
+.B ioctl "(2)"
+manpage for information on
+.I errno
+values.
+
+.SH "CONFORMING TO"
+Nothing
+
+.SH "SEE ALSO"
+.BR ioctl "(2), " fcntl "(2).
+
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on
+.B ioctl
+manpage from BSD manpages
+
+.SH BUGS
+Some or all functionality might have bugs :).  The
+.I soff
+value should be used with particular care, as very little testing has
+been done to verify functionality with this nonzero.

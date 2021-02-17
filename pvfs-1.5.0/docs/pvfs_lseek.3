@@ -1,0 +1,113 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is copyright (c) 1997 Clemson University.
+.\"
+.\" Written by Rob Ross and Matt Cettei.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"           Matt Cettei mcettei@parl.eng.clemson.edu
+.\" 
+.TH PVFS_LSEEK 3 "2 December 1997" "PVFS calls"
+.SH NAME
+pvfs_lseek \- reposition read/write file offset
+.SH SYNOPSIS
+.B #include <unistd.h>
+.sp
+.BI "off_t pvfs_lseek(int " fildes ", off_t " offset ", int " where );
+.SH DESCRIPTION
+The
+.B pvfs_lseek
+function repositions the offset of the file descriptor
+.I fildes
+to the argument
+.I offset
+according to the directive
+.IR  where .
+The argument
+.I fildes
+must be an open file descriptor.
+.B Lseek
+repositions the file pointer
+.I fildes
+as follows:
+.RS
+.sp
+If
+.I where
+is
+.BR SEEK_SET ,
+the offset is set to
+.I offset
+bytes.
+
+If
+.I where
+is
+.BR SEEK_CUR ,
+the offset is set to its current location plus
+.I offset
+bytes.
+
+If
+.I where
+is
+.BR SEEK_END ,
+the offset is set to the size of the file plus
+.I offset
+bytes.
+.RE
+
+The
+.B pvfs_lseek
+function allows the file offset to be set beyond the end of the existing
+end-of-file of the file. If data is later written at this point, subsequent
+reads of the data in the gap return bytes of zeros (until data is actually
+written into the gap).
+
+Note that there is some added complexity in PVFS with regards to seeking.
+Specifically, the locations specified via
+.B pvfs_lseek
+refer to a location in the current
+.I partition
+for the file descriptor.  This means that some extra thought should be
+taken when determining seek offsets.
+
+.SH "RETURN VALUES"
+Upon successful completion,
+.B pvfs_lseek
+returns the resulting offset location in the partition as measured in
+bytes from the beginning of the partition.  Otherwise, a value of \-1 is
+returned and
+.I errno
+is set to indicate the error.  See the 
+.BR lseek "(2)
+manpage for 
+.I errno
+values in the event of an error.
+.SH "CONFORMING TO"
+Nothing
+.SH "SEE ALSO"
+.BR dup "(2), " open "(2), " fseek (3)
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on
+.B ioctl
+manpage from BSD manpages.
+.SH BUGS
+I dumped the use of whence; it's silly.  Yes, there might be bugs.

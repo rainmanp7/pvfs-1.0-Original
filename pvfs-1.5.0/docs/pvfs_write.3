@@ -1,0 +1,81 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is copyright (c) 1997 Clemson University.
+.\"
+.\" Written by Rob Ross and Matt Cettei.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"           Matt Cettei mcettei@parl.eng.clemson.edu
+.\" 
+.TH PVFS_WRITE 3 "2 December 1997" "PVFS calls"
+.SH NAME
+pvfs_write \- write to a file descriptor
+.SH SYNOPSIS
+.B #include <unistd.h>
+.sp
+.BI "ssize_t pvfs_write(int " fd ", const void *" buf ", size_t " count );
+.SH DESCRIPTION
+.B pvfs_write
+writes up to
+.I count
+bytes to the file referenced by the file descriptor
+.I fd
+from the buffer starting at
+.IR buf ".
+This data is written into the currently defined partition for
+that file descriptor, which by default is the entire file.  It is
+written into this partition starting at the current location in the
+partition, which can be set using 
+.BR pvfs_lseek ".
+As with most file systems, this position is automatically updated to
+the byte immediately following the write when the write finishes.
+Note that the partitioning functionality can be used with non-PVFS files
+as well, as long as they were opened with
+.BR pvfs_open ".
+
+When a
+.B pvfs_write
+call completes, all data has been passed to the kernel on all I/O nodes
+and thus can be considered as having been written to disk for the
+purposes of consistency (although in the event of a power failure the
+data might or might not have made it to disk).
+.SH "RETURN VALUE"
+On success, the number of bytes written are returned (zero indicates
+nothing was written).  On error, \-1 is returned, and \fIerrno\fP is set
+appropriately.  If \fIcount\fP is zero and the file descriptor refers to
+a regular file, 0 will be returned without causing any other effect.
+See the
+.BR write (2)
+manpage for information on
+.I errno
+values in the presence of an error.
+.SH "CONFORMING TO"
+Nothing
+.SH "SEE ALSO"
+.BR pvfs_open (3),
+.BR pvfs_read (3),
+.BR pvfs_close (3),
+.BR pvfs_lseek (3),
+.BR pvfs_ioctl (3),
+.BR write (2).
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on the
+.B write
+manpage by Drew Eckhardt, Michael Haardt, and Ian Jackson

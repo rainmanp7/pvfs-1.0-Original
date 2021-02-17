@@ -1,0 +1,85 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is copyright (c) 1997 Clemson University.
+.\"
+.\" Written by Rob Ross and Matt Cettei.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"           Matt Cettei mcettei@parl.eng.clemson.edu
+.\" 
+.TH PVFS_READ 3 "2 December 1997" "PVFS calls"
+.SH NAME
+pvfs_read \- read from a file descriptor
+.SH SYNOPSIS
+.nf
+.B #include <unistd.h>
+.sp
+.BI "ssize_t pvfs_read(int " fd ", void *" buf ", size_t " count );
+.fi
+.SH DESCRIPTION
+.B pvfs_read()
+attempts to read up to
+.I count
+bytes from file descriptor
+.I fd
+into the buffer starting at
+.IR buf .
+This data is read from the currently defined partition for that file
+descriptor, which by default is the entire file.  It is read starting
+from the current location in the partition, which can be set using
+.BR pvfs_lseek ".
+Note that the partitioning functionality can be used with non-PVFS files
+as well, as long as they were opened with
+.BR pvfs_open ".
+.PP
+If
+.I count
+is zero, \fBread()\fP returns zero and has no other results.
+If
+.I count
+is greater than SSIZE_MAX, the result is unspecified.
+.PP
+
+.SH "RETURN VALUE"
+On success, the number of bytes read is returned (zero indicates end of
+file), and the file position is advanced by this number of bytes in the
+partition.
+It is not an error if this number is smaller than the number of bytes
+requested; this may happen for example because fewer bytes are actually
+available right now (maybe because we were close to end-of-file, or
+because we are reading from a pipe, or from a terminal), or because
+\fBread()\fP was interrupted by a signal.
+On error, \-1 is returned, and
+.I errno
+is set appropriately. In this case it is left unspecified whether
+the file position (if any) changes.  For 
+.I errno 
+values, see the 
+.BR read "(2)
+manpage.
+.SH "CONFORMING TO"
+Nothing
+.SH "SEE ALSO"
+.BR pvfs_open "(3), " pvfs_write "(3), " read "(2), " pvfs_close "(3), "
+.BR pvfs_lseek "(3), "
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on
+.B read
+manpage by Drew Eckhardt, Michael Haardt, and Ian Jackson

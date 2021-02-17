@@ -1,0 +1,56 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is copyright (c) 1997 Clemson University.
+.\"
+.\" Written by Rob Ross and Matt Cettei.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"           Matt Cettei mcettei@parl.eng.clemson.edu
+.\" 
+.TH PVFS_RMDIR 3 "2 December 1997" "PVFS calls"
+.SH NAME
+pvfs_rmdir \- delete a directory
+.SH SYNOPSIS
+.B #include <unistd.h>
+.sp
+.BI "int pvfs_rmdir(const char *" pathname );
+.SH DESCRIPTION
+.B pvfs_rmdir
+deletes a directory, which must be empty.
+.SH "RETURN VALUE"
+On success, zero is returned.  On error, \-1 is returned, and
+.I errno
+is set appropriately. See the 
+.BR rmdir "(2)"
+manpage for
+.I errno
+values in the presence of errors.
+.SH "CONFORMING TO"
+Nothing
+.SH "SEE ALSO"
+.BR rename "(2), " mkdir "(2), " chdir "(2), " unlink (2),
+.BR pvfs_unlink "(3), "
+.BR rmdir "(1), " rm (1)
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on
+.B rmdir
+manpage by Drew Eckhardt, Michael Haardt, and Ian Jackson
+.SH BUGS
+Maybe.

@@ -1,0 +1,9 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+.SUFFIXES:
+.SUFFIXES: .h
+
+all: debug.h desc.h meta.h minmax.h pvfs.h req.h
+
+clean::

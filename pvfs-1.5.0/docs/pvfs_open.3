@@ -1,0 +1,171 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is copyright (c) 1997 Clemson University.
+.\"
+.\" Written by Rob Ross and Matt Cettei.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"           Matt Cettei mcettei@parl.eng.clemson.edu
+.\" 
+.TH PVFS_OPEN 3 "December 1, 1997" "" "PVFS calls"
+.SH NAME
+pvfs_open, pvfs_creat \- open and possibly create a file or device
+.SH SYNOPSIS
+.nf
+.B #include <sys/types.h>
+.B #include <sys/stat.h>
+.B #include <fcntl.h>
+.B #include <pvfs.h>
+.sp
+.BI "int pvfs_open(const char *" pathname ", int " flags );
+.BI "int pvfs_open(const char *" pathname ", int " flags ", mode_t " mode );
+.BI "int pvfs_open(const char *" pathname ", int " flags ", mode_t " mode ,
+.BI "pvfs_filestat *" meta_p );
+.BI "int pvfs_open(const char *" pathname ", int " flags ", mode_t " mode ,
+.BI "fpart *" part_p );
+.BI "int pvfs_open(const char *" pathname ", int " flags ", mode_t " mode ,
+.BI "pvfs_filestat *" meta_p ", fpart *" part_p );
+.BI "int pvfs_creat(const char *" pathname ", mode_t " mode );
+.fi
+.SH DESCRIPTION
+.B pvfs_open
+attempts to open a file and return a file descriptor (a small,
+non-negative integer for use in
+.BR pvfs_read ", " pvfs_write ", etc.)"
+If the file is held on a non-PVFS file system,
+.BR pvfs_open
+will use the standard
+.BR open
+system call.  However, it will also allow for setting partition
+information on these files.  This can be useful especially in debugging
+parallel applications without using the file system, as the
+.BR pvfs_read " and " pvfs_write
+calls can then be used to read and write from the partition of the
+non-PVFS file just as they would from a PVFS one.
+
+.I flags
+is one of
+.BR O_RDONLY ", " O_WRONLY " or " O_RDWR
+which request opening the file read-only, write-only or read/write,
+respectively.
+
+.I flags
+may also be
+.RI bitwise- or 'd
+with one or more of the following:
+.TP
+.B O_CREAT
+If the file does not exist it will be created.
+.TP
+.B O_TRUNC
+If the file already exists it will be truncated.
+.TP
+.B O_META
+Indicates that
+.I meta_p
+points to metadata information.
+.TP
+.B O_PART
+Indicates that
+.I part_p
+points to partition information.  Note that if both
+.B O_META
+and
+.B O_PART
+are specified, the pointer to the
+.B pvfs_filestat
+structure must preceed the one to the 
+.B fpart 
+structure.  See the 
+.B pvfs_ioctl
+manpage for declarations of these structures.
+.TP
+.B O_APPEND
+The file is opened in append mode. Initially, and before each
+.BR write ,
+the file pointer is positioned at the end of the file, as if
+with
+.BR lseek .
+.B O_APPEND
+may lead to corrupted files on PVFS file systems if more than one process appends data to a
+.TP
+.BR O_NONBLOCK " or " O_NDELAY
+These are unimplemented in PVFS at this time.
+.TP
+.B O_SYNC
+The file is opened for synchronous I/O. Any
+.BR write s
+on the resulting file descriptor will block the calling process until
+the data has been physically written to the underlying hardware.  This
+is unimplemented in PVFS at this time.
+.TP
+.B O_EXCL
+This is unimplemented in PVFS at this time.
+.PP
+
+.I mode
+specifies the permissions to use if a new file is created in the same
+way as with the 
+.BR open
+call.
+.I mode 
+should always be specified when
+.B O_CREAT
+is in the
+.IR flags ,
+and is ignored otherwise.
+
+.I meta_p
+specifies metadata to use if a new file is created.  This can
+be specified when the 
+.B O_CREAT
+flag is used, and is ignored otherwise.
+
+.I part_p
+specifies a partition to use for this instance of an open file.  This
+can be specified regardless of the use of any other optional flags.
+
+.B pvfs_creat
+is equivalent to
+.B pvfs_open
+with
+.I flags
+equal to
+.BR O_CREAT|O_WRONLY|O_TRUNC .
+.SH "RETURN VALUE"
+.BR pvfs_open " and " pvfs_creat
+return the new file descriptor, or \-1 if an error occurred (in which case,
+.I errno
+is set appropriately).  See the
+.B open
+manpage for information on
+.I errno
+values.
+.LP
+.SH "CONFORMING TO"
+Nothing
+.SH "SEE ALSO"
+.BR open "(2), " pvfs_ioctl "(3).
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on
+.BR open
+manpage by Drew Eckhardt, Michael Haardt, and Ian Jackson
+.SH BUGS
+Some or all functionality might have bugs :).

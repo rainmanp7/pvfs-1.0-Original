@@ -1,0 +1,100 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+# The next two lines keep make from checking wacked out implicit rules
+.SUFFIXES:
+.SUFFIXES: .c .o .a .h
+
+INCDIR= -I. -I../shared -I../include
+CFLAGS= $(INCDIR) @CFLAGS@
+CC=@CC@
+
+SUBDIRS= mdbi ../shared
+
+STOBJS= obj_static/pvfs_chmod.o obj_static/pvfs_chown.o \
+	obj_static/pvfs_open.o obj_static/pvfs_ostat.o \
+	obj_static/pvfs_close.o obj_static/pvfs_unlink.o \
+	obj_static/alist.o obj_static/build_job.o \
+	obj_static/do_job.o obj_static/pvfs_read.o \
+	obj_static/pvfs_write.o obj_static/pvfs_fstat.o \
+	obj_static/pvfs_lseek.o obj_static/prune.o \
+	obj_static/pvfs_rename.o obj_static/pvfs_ioctl.o \
+	obj_static/debug.o obj_static/pvfs_exit.o \
+	obj_static/pvfs_gcalls.o \
+	obj_static/pvfs_mkdir.o \
+	obj_static/pvfs_fcntl.o obj_static/pvfs_rmdir.o \
+	obj_static/pvfs_fchown.o obj_static/pvfs_fchmod.o \
+	obj_static/pvfs_dup.o obj_static/pvfs_dup2.o \
+	obj_static/pvfs_lstat.o obj_static/jlist.o \
+	obj_static/pvfs_access.o \
+	obj_static/mgrcomm.o obj_static/pvfs_mmap.o \
+	obj_static/pvfs_ftruncate.o obj_static/pvfs_flock.o \
+	obj_static/pvfs_fdatasync.o obj_static/pvfs_fsync.o \
+	obj_static/pvfs_readv.o obj_static/pvfs_writev.o \
+	obj_static/pvfs_truncate.o obj_static/pvfs_utime.o \
+	obj_static/pvfs_statfs.o obj_static/pvfs_getdents.o \
+	obj_static/pvfs_ftruncate64.o obj_static/pvfs_truncate64.o \
+	obj_static/pvfs_lseek64.o obj_static/parse_fstab.o \
+	obj_static/pvfs_detect.o
+
+SHOBJS= obj_shared/pvfs_chmod.os obj_shared/pvfs_chown.os \
+	obj_shared/pvfs_open.os obj_shared/pvfs_ostat.os \
+	obj_shared/pvfs_close.os obj_shared/pvfs_unlink.os \
+	obj_shared/alist.os obj_shared/build_job.os \
+	obj_shared/do_job.os obj_shared/pvfs_read.os \
+	obj_shared/pvfs_write.os obj_shared/pvfs_fstat.os \
+	obj_shared/pvfs_lseek.os obj_shared/prune.os \
+	obj_shared/pvfs_rename.os obj_shared/pvfs_ioctl.os \
+	obj_shared/debug.os obj_shared/pvfs_exit.os \
+	obj_shared/pvfs_gcalls.os \
+	obj_shared/pvfs_mkdir.os \
+	obj_shared/pvfs_fcntl.os obj_shared/pvfs_rmdir.os \
+	obj_shared/pvfs_fchown.os obj_shared/pvfs_fchmod.os \
+	obj_shared/pvfs_dup.os obj_shared/pvfs_dup2.os \
+	obj_shared/pvfs_lstat.os obj_shared/jlist.os \
+	obj_shared/pvfs_access.os \
+	obj_shared/mgrcomm.os obj_shared/pvfs_mmap.os \
+	obj_shared/pvfs_ftruncate.os obj_shared/pvfs_flock.os \
+	obj_shared/pvfs_fdatasync.os obj_shared/pvfs_fsync.os \
+	obj_shared/pvfs_readv.os obj_shared/pvfs_writev.os \
+	obj_shared/pvfs_truncate.os obj_shared/pvfs_utime.os \
+	obj_shared/pvfs_statfs.os obj_shared/pvfs_getdents.os \
+	obj_shared/pvfs_ftruncate64.os obj_shared/pvfs_truncate64.os \
+	obj_shared/pvfs_lseek64.os obj_shared/parse_fstab.os \
+	obj_shared/pvfs_detect.os
+
+HDRS= lib.h build_job.h jlist.h alist.h ../include/meta.h \
+	../include/req.h ../include/desc.h ../include/debug.h \
+	../shared/sockset.h ../shared/llist.h
+
+all: libminipvfs.a 
+
+libminipvfs.a : $(STOBJS) subdir-static
+	ar rvs libminipvfs.a $(STOBJS) obj_static/sockset.o \
+	obj_static/sockio.o obj_static/llist.o obj_static/check_pvfs.o \
+	obj_static/unix-stats.o obj_static/resv_name.o \
+	obj_static/dfd_set.o
+
+obj_static/%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+obj_shared/%.os : %.c
+	$(CC) $(CFLAGS) -c -fPIC $< -o $@
+
+subdir-static::
+	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i obj_static; done
+
+subdir-shared::
+	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i obj_shared; done
+
+clean::
+	# rm -f $(STOBJS) $(SHOBJS) libpvfs.a libpvfs.so.1.3 libminipvfs.a
+	rm -f $(STOBJS) $(SHOBJS) libminipvfs.a
+	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i clean; done
+
+#### DEPENDENCIES ####
+do_job.o: prune.h
+$(STOBJS) : $(HDRS)
+$(SHOBJS) : $(HDRS)
+
+

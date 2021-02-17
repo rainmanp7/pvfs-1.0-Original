@@ -1,0 +1,61 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+# The next two lines keep make from checking wacked out implicit rules
+.SUFFIXES:
+.SUFFIXES: .c .o .a .h
+
+CFLAGS=-I../include @CFLAGS@ -DDEBUG
+LDFLAGS=-L../lib
+
+CP = cp
+LD = gcc
+CC = @CC@
+
+all: u2p pvstat mkdot pvfs-unlink pvfs-mkfile pvfs-size pvfs-statfs \
+	iod-ping mgr-ping
+
+pvfs-size: pvfs-size.o ../lib/libminipvfs.a
+	$(LD) $(LDFLAGS) pvfs-size.o -lminipvfs -o $@
+
+pvfs-mkfile: pvfs-mkfile.o ../lib/libminipvfs.a
+	$(LD) $(LDFLAGS) pvfs-mkfile.o -lminipvfs -o $@
+
+pvfs-statfs: pvfs-statfs.o ../lib/libminipvfs.a
+	$(LD) $(LDFLAGS) pvfs-statfs.o -lminipvfs -o $@
+
+pvfs-unlink: pvfs-unlink.o ../lib/libminipvfs.a
+	$(LD) $(LDFLAGS) pvfs-unlink.o -lminipvfs -o $@
+
+pvfs-test: pvfs-test.c ../lib/libminipvfs.a
+	mpicc $(CFLAGS) $(LDFLAGS) -D__USE_MPI__ pvfs-test.c -lminipvfs -o $@
+
+pvfs-testrandom: pvfs-testrandom.o ../lib/libminipvfs.a
+	$(LD) $(LDFLAGS) pvfs-testrandom.o -lminipvfs -o $@
+
+pvfs-testdist: pvfs-testdist.o ../lib/libminipvfs.a
+	$(LD) $(LDFLAGS) pvfs-testdist.o -lminipvfs -o $@
+
+u2p: u2p.o ../lib/libminipvfs.a
+	$(LD) $(LDFLAGS) u2p.o -lminipvfs -o $@
+
+pvstat: pvstat.o 
+	$(LD) $(LDFLAGS) pvstat.o -lminipvfs -o $@
+
+mkdot: mkdot.o
+	$(LD) $(LDFLAGS) mkdot.o -o $@
+
+mgr-ping: mgr-ping.c
+	$(CC) $(CFLAGS) -I../shared -c mgr-ping.c
+	$(LD) $(LDFLAGS) mgr-ping.o -lminipvfs -o $@
+	
+iod-ping: iod-ping.c
+	$(CC) $(CFLAGS) -I../shared -c iod-ping.c
+	$(LD) $(LDFLAGS) iod-ping.o -lminipvfs -o $@
+	
+iod-statfs: iod-statfs.c
+	$(CC) $(CFLAGS) -I../shared -c iod-statfs.c
+	$(LD) $(LDFLAGS) iod-statfs.o -lminipvfs -o $@
+	
+clean::
+	rm -rf *.o mkdot u2p pvstat

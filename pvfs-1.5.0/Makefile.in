@@ -1,0 +1,78 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+SHELL = /bin/sh
+# The next two lines keep make from checking wacked out implicit rules
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+INSTALL = install
+
+ifndef install_root
+install_root = /
+endif
+
+ifndef DAEMONDIR
+DAEMONDIR = @sbindir@
+endif
+
+ifndef EXAMPLEDIR
+EXAMPLEDIR = @bindir@
+endif
+
+ifndef INCDIR
+INCDIR = @includedir@
+endif
+
+ifndef BINDIR
+BINDIR = @bindir@
+endif
+
+ifndef LIBDIR
+LIBDIR = @libdir@
+endif
+
+SUBDIRS = include shared mgr iod lib utils examples
+EXAMPLES = twrite tread
+UTILS = mkdot u2p mkmgrconf pvstat enableiod enablemgr pvfs-size \
+	pvfs-mkfile pvfs-unlink pvfs-statfs iod-ping mgr-ping
+
+all::
+	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i; done
+
+clean::
+	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i clean; done
+
+install: real_install
+real_install::
+	if [ ! -d $(install_root)/$(DAEMONDIR) ]; then install -d \
+		$(install_root)/$(DAEMONDIR); fi
+	if [ ! -d $(install_root)/$(EXAMPLEDIR) ]; then install -d \
+		$(install_root)/$(EXAMPLEDIR); fi
+	if [ ! -d $(install_root)/$(INCDIR) ]; then install -d \
+		$(install_root)/$(INCDIR); fi
+	if [ ! -d $(install_root)/$(BINDIR) ]; then install -d \
+		$(install_root)/$(BINDIR); fi
+	if [ ! -d $(install_root)/$(LIBDIR) ]; then install -d \
+		$(install_root)/$(LIBDIR); fi
+	install -m 755 iod/iod $(install_root)/$(DAEMONDIR)
+	install -m 755 lib/libminipvfs.a $(install_root)/$(LIBDIR)
+	install -m 755 lib/libminipvfs.a $(install_root)/$(LIBDIR)/libpvfs.a
+	install -m 755 mgr/mgr $(install_root)/$(DAEMONDIR)
+	install -m 644 include/*.h $(install_root)/$(INCDIR)
+	set -e; for i in $(UTILS); do install -m 755 utils/$$i \
+		$(install_root)/$(BINDIR); done
+	set -e; for i in $(EXAMPLES); do install -m 755 examples/$$i \
+		$(install_root)/$(EXAMPLEDIR); done
+	$(MAKE) -C docs install
+
+pvfs.tgz::
+	(cd ..; tar czf pvfs.tgz \
+	--exclude pvfs/config.cache \
+	--exclude pvfs/Makefile \
+	--exclude mgr/Makefile \
+	--exclude lib/Makefile \
+	--exclude iod/Makefile \
+	pvfs)

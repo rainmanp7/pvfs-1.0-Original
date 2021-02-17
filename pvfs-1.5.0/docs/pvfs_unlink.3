@@ -1,0 +1,65 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is copyright (c) 1997 Clemson University.
+.\"
+.\" Written by Rob Ross and Matt Cettei.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"           Matt Cettei mcettei@parl.eng.clemson.edu
+.\" 
+.TH PVFS_UNLINK 3 "2 December 1997" "PVFS calls"
+.SH NAME
+pvfs_unlink \- delete a name and possibly the file it refers to
+.SH SYNOPSIS
+.B #include <unistd.h>
+.sp
+.BI "int pvfs_unlink(const char *" pathname );
+.SH DESCRIPTION
+.B pvfs_unlink
+deletes a name from the filesystem. If that name was the last link to a
+file and no processes have the file open, the file metadata is deleted
+by the manager, and the space it was using is made available for reuse
+on the I/O nodes.
+
+If the name was the last link to a file but any processes still have
+the file open the file will remain in existence until the last file
+descriptor referring to it is closed.
+
+If the name referred to a symbolic link the link is removed.
+
+.SH "RETURN VALUE"
+On success, zero is returned.  On error, \-1 is returned, and
+.I errno
+is set appropriately. See the 
+.BR unlink "(2)"
+manpage for information on
+.I errno
+values.
+.SH "CONFORMING TO"
+Nothing
+.SH "SEE ALSO"
+.BR unlink "(2), " pvfs_rename "(3), " pvfs_open "(3), " pvfs_rmdir (3),
+.BR " rm "(1), " unlink (8).
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on
+.B unlink
+manpage by Drew Eckhardt and Ian Jackson
+.SH BUGS
+Anything dealing with links is unlikely to work correctly.

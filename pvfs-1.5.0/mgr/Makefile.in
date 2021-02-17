@@ -1,0 +1,47 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+# The next two lines keep make from checking wacked out implicit rules
+.SUFFIXES:
+.SUFFIXES: .c .o .h
+
+CFLAGS = -I ../include -I ../shared -I. -Imeta @CFLAGS@
+
+LD = gcc
+CC = @CC@
+
+MGROBJS = mgr.o flist.o fslist.o iodtab.o filter-dirents.o
+
+SHROBJS = ../shared/sockio.o ../shared/llist.o ../shared/sockset.o \
+	../shared/check_pvfs.o ../shared/resv_name.o ../shared/unix-stats.o \
+	../shared/dfd_set.o
+
+MDOBJS = meta/md_open.o meta/md_close.o meta/md_stat.o meta/md_unlink.o \
+	meta/md_mount.o meta/md_chown.o meta/md_chmod.o meta/dmetaio.o \
+	meta/put_dmeta.o meta/md_rmdir.o meta/metaio.o meta/get_dmeta.o \
+	meta/md_mkdir.o
+
+all : mgr
+
+mgr : $(MGROBJS) shared-objs meta-objs
+	$(LD) $(LDFLAGS) -o mgr $(MGROBJS) $(SHROBJS) $(MDOBJS)
+
+meta-objs::
+	$(MAKE) -C meta
+
+shared-objs::
+	$(MAKE) -C ../shared
+
+clean::
+	rm -rf *.o mgr
+	$(MAKE) -C meta clean
+
+#### DEPENDENCIES ####
+
+iodtab.o : iodtab.h
+flist.o : flist.h ../shared/llist.h ../include/meta.h
+fslist.o : ../shared/llist.h ../include/desc.h flist.h fslist.h
+mgr.o : mgr.h ../include/debug.h ../include/desc.h ../include/meta.h \
+	../shared/sockio.h ../shared/sockset.h fslist.h flist.h \
+	iodtab.h ../include/req.h ../include/minmax.h
+

@@ -1,0 +1,62 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified Sat Jul 24 13:39:26 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Tue Sep 26 21:47:21 1995 by Andries Brouwer <aeb@cwi.nl>
+.\" and once more on 960413.
+.\"
+.TH PVFS_FCNTL 3 "2 December 1997" "PVFS calls"
+.SH NAME
+pvfs_fcntl \- manipulate file descriptor
+.SH SYNOPSIS
+.nf
+.B #include <unistd.h>
+.B #include <fcntl.h>
+.sp
+.BI "int pvfs_fcntl(int " fd ", int " cmd );
+.BI "int pvfs_fcntl(int " fd ", int " cmd ", long " arg );
+.fi
+.SH DESCRIPTION
+.B pvfs_fcntl
+performs one of various miscellaneous operations on
+.IR fd ,
+or would, except that
+.B pvfs_fcntl
+does nothing on PVFS files.  For non-PVFS files, however, it will use the
+.B fcntl
+system call to perform the requested operation.  See the 
+.BR fcntl "(2)
+manpage for more information.
+.SH "CONFORMING TO"
+Nothing
+.SH "SEE ALSO"
+.BR pvfs_ioctl (3),
+.BR fcntl (2)
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on
+.B fcntl
+manpage by Drew Eckhardt, Michael Haardt, and Ian Jackson.
+.SH BUGS
+It doesn't work for PVFS files at all.

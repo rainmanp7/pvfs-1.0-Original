@@ -1,0 +1,23 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+LDFLAGS=
+CFLAGS=-I../../include @CFLAGS@
+
+OBJS = md_chmod.o md_chown.o md_open.o md_stat.o md_close.o md_unlink.o \
+	md_mount.o put_dmeta.o md_rmdir.o metaio.o dmetaio.o get_dmeta.o \
+	md_mkdir.o
+
+all : $(OBJS)
+
+clean::
+	rm -rf $(OBJS)
+
+rcsclean::
+	rcsclean
+
+checkout::
+	co -q RCS/*
+
+#### DEPENDENCIES ####
+$(OBJS) : ../../include/meta.h ../../include/req.h

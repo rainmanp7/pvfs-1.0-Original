@@ -1,0 +1,82 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is copyright (c) 1997 Clemson University.
+.\"
+.\" Written by Rob Ross and Matt Cettei.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"           Matt Cettei mcettei@parl.eng.clemson.edu
+.\" 
+.TH PVFS_MKDIR 3 "2 December 1997" "PVFS calls"
+.SH NAME
+pvfs_mkdir \- create a directory
+.SH SYNOPSIS
+.nf
+.B #include <sys/types.h>
+.B #include <fcntl.h>
+.B #include <unistd.h>
+.sp
+.BI "int pvfs_mkdir(const char *" pathname ", mode_t " mode );
+.fi
+.SH DESCRIPTION
+.B pvfs_mkdir
+attempts to create a directory named
+.IR pathname .
+If the file system on which the directory is to be created is not a PVFS
+one, the
+.B mkdir
+system call is used to perform the requested operation.
+
+.I mode
+specifies the permissions to use. It is modified by the process's
+.BR umask
+in the usual way: the permissions of the created file are
+.BR "(mode & ~umask)" .
+
+The newly created directory will be owned by the effective uid of the
+process.  If the directory containing the file has the set group id
+bit set, or if the filesystem is mounted with BSD group semantics, the
+new directory will inherit the group ownership from its parent;
+otherwise it will be owned by the effective gid of the process.
+
+If the parent directory has the set group id bit set then so will the
+newly created directory.
+
+.SH RETURN VALUE
+.BR mkdir
+returns zero on success, or -1 if an error occurred (in which case,
+.I errno
+is set appropriately). See the 
+.BR mkdir "(2)
+manpage for information on 
+.I errno
+values in the event of an error.
+.SH CONFORMING TO
+Nothing
+.SH SEE ALSO
+.BR pvfs_unlink "(3), " pvfs_open "(3), " pvfs_stat "(3), " umask (2),
+.BR mkdir "(2).
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on 
+.B mkdir
+manpage by Drew Eckhardt, Michael Haardt, and Ian Jackson.
+.SH BUGS
+Owners and permissions might not follow UNIX semantics with respect to
+effective UIDs and group id bits.

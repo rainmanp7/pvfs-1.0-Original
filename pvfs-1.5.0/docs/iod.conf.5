@@ -1,0 +1,123 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\" Copyright (c) 1998  Clemson University
+.\" 
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\" 
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\" 
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+.\"
+.TH IOD.CONF 5 "16 November 1998" "Version 1.2" "PVFS Administration"
+.SH NAME
+iod.conf \- iod(8) configuration file
+.SH DESCRIPTION
+The
+.I iod.conf
+file is the main configuration file for the
+.BR iod (8)
+which performs I/O for PVFS. This file specifies configuration
+parameters for the daemon.
+For special features see the
+.BR iod (8)
+manpage.
+
+Every line consists of two fields, a 
+.I selector
+field and an
+.I value 
+field. These two fields are separated by one or more spaces or
+tabs. The selector field specifies a configuration parameter 
+which should be set to the value.
+
+Lines starting with a hash mark (``#'') and empty lines are ignored.
+
+.SH SELECTORS
+The 
+.I selector
+field itself again consists of one of the following:
+.BR port ", " user ", " group ", " rootdir ", " datadir ", " logdir ", or "
+.BR debug .
+Selectors are case insensitive.  If the same selector is used again, it
+will override the first instance.
+
+.B port 
+specifies the port on which the iod should accept requests.
+
+.B user
+specifies the user under which the iod should run.
+
+.B group
+specifies the group under which the iod should run.
+
+.B rootdir
+gives the directory the iod should use as its rootdir.  The iod uses
+.BR chroot (2)
+to change to this directory before accessing files.
+
+.B datadir
+gives the directory the iod should use as its data directory.  The iod
+uses
+.BR chdir (2)
+to change to this directory after changing the root directory.
+
+Likewise, 
+.B logdir
+specifies the directory in which to store logging files with respect to
+the new root directory.
+
+.B debug
+specifies a debugging level.
+
+The 
+.I value 
+field gives a value to use for the configuration parameter specified by
+the selector.  
+
+.SH EXAMPLE
+Here is an example iod.conf file:
+
+.IP
+.nf
+# IOD Configuration file, iod.conf
+#
+
+port 7001
+user nobody
+group nobody
+rootdir /
+datadir /pvfs_data
+logdir /tmp
+debug 0
+
+.fi
+.LP
+
+
+.SH FILES
+.PD 0
+.TP
+.I /etc/iod.conf
+Configuration file for
+.B iod .
+
+.SH SEE ALSO
+.BR iod (8)
+
+.SH AUTHORS
+Rob Ross, Clemson University
+
+Based on
+.B syslogd
+manpage by Greg Wettstein
+and Martin Schulze.
+
+.SH BUGS
+Probably.  Debugging level isn't used at the moment, so that's one.

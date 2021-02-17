@@ -1,0 +1,78 @@
+.\" Copyright (c) 1999 Clemson University, All rights reserved.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"
+.TH PVFSTAB 5 "8 November 1999" "PVFS Configuration"
+.SH NAME
+pvfstab \- static information about PVFS file systems
+.SH SYNOPSIS
+.B #include <fstab.h>
+.SH DESCRIPTION
+The file
+.B /etc/pvfstab
+contains descriptive information about the various file systems.
+.B pvfstab
+is read by the PVFS client library in order to ascertain the location of
+PVFS file system.  It should exist and be readable on all machines on
+which PVFS clients will run.  It is up to the system administrator to
+install and maintain this configuration file.
+Each file system
+is described on a separate line; fields on each line are separated by tabs
+or spaces just as in a standard
+.B fstab
+file.
+
+The first field,
+.RI ( fs_spec ),
+describes the remote PVFS file system to be mounted.  The host name
+specified refers to the manager host.
+
+The second field,
+.RI ( fs_file ),
+describes the mount point for the file system.  In the case of the client
+library this is simply a directory name, which should exist, which will
+be used as a placeholder for where the file system WOULD be mounted.
+
+The third field,
+.RI ( fs_vfstype ),
+describes the type of the filesystem.  This must be
+.B pvfs
+in order for the pvfs parsing code to accept the entry.
+
+The fourth field,
+.RI ( fs_mntops ),
+describes the mount options associated with the file system.  The only
+option used by PVFS at the time this page was written is the
+.I port
+option, which specifies the port for the manager.  This should always be
+included and should normally be set to 3000.
+
+The fifth and sixth fields, which are normally used for determining when
+file systems should be dumped and checked, are not used at this time and
+should be set to 0.
+
+.SH FILES
+.I /etc/pvfstab
+.SH BUGS
+Probably.
+.SH "SEE ALSO"
+.BR " mount "(8), " fstab "(5), " swapon "(8), " nfs (5)
+.SH HISTORY
+The
+.B fstab
+file format appeared in 4.0BSD.

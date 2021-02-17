@@ -1,0 +1,93 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is copyright (c) 1997 Clemson University.
+.\"
+.\" Written by Rob Ross and Matt Cettei.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" The author(s) assume no responsibility for errors or omissions, or
+.\" for damages resulting from the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Contact:  Rob Ross    rbross@parl.eng.clemson.edu
+.\"           Matt Cettei mcettei@parl.eng.clemson.edu
+.\" 
+.\"
+.TH PVFS_STAT 3 "1 December 1997"  "PVFS calls"
+.SH NAME
+pvfs_stat, pvfs_fstat, pvfs_lstat \- get file status
+.SH SYNOPSIS
+.B #include <sys/stat.h>
+.br
+.B #include <unistd.h>
+.sp
+.BI "int pvfs_stat(const char *" file_name ", struct stat *" buf );
+.br
+.BI "int pvfs_fstat(int " filedes ", struct stat *" buf );
+.br
+.BI "int pvfs_lstat(const char *" file_name ", struct stat *" buf );
+.SH DESCRIPTION
+.PP
+These functions return information about the specified file.  You do
+not need any access rights to the file to get this information but you
+need search rights to all directories named in the path leading to the
+file.
+.PP
+.B stat
+stats the file pointed to by 
+.I file_name
+and fills in
+.IR buf .
+
+.B lstat
+is identical to
+.BR stat ,
+only the link itself is stated, not the file that is obtained by tracing
+the links.
+
+.B fstat
+is identical to stat, only the open file pointed to by 
+.I filedes
+(as returned by
+.BR pvfs_open (2))
+is stated in place of 
+.IR file_name .
+
+.PP
+They all return a
+.I stat
+structure, which is declared in the 
+.BR stat "(2)"
+manpage.
+
+.SH "RETURN VALUE"
+On success, zero is returned.  On error, \-1 is returned, and
+.I errno
+is set appropriately.  See the 
+.B stat
+manpage for information on
+.I errno
+values.
+
+.SH "CONFORMING TO"
+Nothing
+
+.SH "SEE ALSO"
+.BR stat "(2), " chmod "(2), " chown "(2), " readlink "(2), " utime (2)
+
+.SH AUTHOR
+Rob Ross, Clemson University
+
+Based on
+.B stat
+manpage by Drew Eckhardt and Nicolai Langfeldt

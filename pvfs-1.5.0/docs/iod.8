@@ -1,0 +1,80 @@
+.\"  -*- nroff -*-
+.\" Copyright (c) 1998  Clemson University
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+.\"
+.TH IOD 8 "16 November 1998" "Version 1.2" "PVFS Daemons"
+
+.SH NAME
+iod \- PVFS I/O daemon
+
+.SH SYNOPSIS
+.na
+.B iod
+[\c
+.BI \ config_file\fR\c
+ ]
+.ad
+
+
+.SH DESCRIPTION 
+.B iod
+(I/O Daemon) is the daemon program for PVFS responsible for performing
+I/O on disks for application tasks.  This daemon, together with the
+.B mgr (8)
+daemon, handle all aspects of access to PVFS files.
+
+.SH CONFIGURATION FILE
+
+The iod relies on a configuration file for setting its runtime
+parameters.  This file by default is 
+.IR /etc/iod.conf .
+An alternative
+filename can be given on the command line.
+
+The default parameters for the I/O daemon at the time this man page was
+written are as follows:
+port 7000, user nobody, group nobody, rootdir /, datadir /pvfs_data,
+logdir /tmp, debug 0.  See
+.B iod.conf (5)
+for more information on configuration files.
+
+.SH SIGNALS
+
+On receipt of a SIGHUP signal, the I/O daemon will close all active
+connections and close all open files.  It will then resume accepting and
+servicing requests.
+
+Due to the nature of the configuration process, it
+is impossible for the I/O daemon to reread its configuration file and
+reset its configuration completely, so this is not done.  If you wish to
+have the configuration file reread, you must kill and restart the iod.
+
+.SH FILES
+.PD 0
+.TP
+.I /etc/iod.conf
+Configuration file for
+.B iod .
+
+.SH SEE ALSO
+.BR iod.conf (5)
+.BR mgr (8)
+
+.SH AUTHORS
+Rob Ross, Clemson University
+
+.SH BUGS
+Sure.

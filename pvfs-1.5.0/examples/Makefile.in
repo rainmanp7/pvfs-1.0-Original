@@ -1,0 +1,25 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+CFLAGS = -I../include -I . -I../sockio -I../iod -I../llist @CFLAGS@
+LDFLAGS = -L../lib
+PLIB = ../lib/libminipvfs.a
+
+LD = gcc
+CC = @CC@
+
+all: twrite tread
+
+clean::
+	rm -rf *.o tseq twrite tread
+
+TMOBJS = ../sockio/sockio.o testmgr.o
+
+tseq: tseq.o $(PLIB)
+	$(LD) $(LDFLAGS) $@.o -lminipvfs -o $@
+
+twrite: twrite.o $(PLIB)
+	$(LD) $(LDFLAGS) $@.o -lminipvfs -o $@
+
+tread: tread.o $(PLIB)
+	$(LD) $(LDFLAGS) $@.o -lminipvfs -o $@

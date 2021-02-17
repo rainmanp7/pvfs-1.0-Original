@@ -1,0 +1,79 @@
+.\"  -*- nroff -*-
+.\" Copyright (c) 1998  Clemson University
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+.\"
+.TH MGR 8 "16 November 1998" "Version 1.2" "PVFS Daemons"
+
+.SH NAME
+mgr \- PVFS manager daemon
+
+.SH SYNOPSIS
+.na
+.B mgr
+.RB [ " \-d " ]
+.RB [ " \-r " ]
+.RB [ " \-t " 
+.I timeout
+]
+.ad
+
+
+.SH DESCRIPTION 
+.B mgr
+(Manager Daemon) is the daemon program for PVFS responsible for
+authenticating
+file access and handling file creation and removal.  This daemon,
+together with the
+.B iod (8)
+daemon, handle all aspects of access to PVFS files.
+
+.SH OPTIONS
+.TP
+.B "\-d"
+Turns on debug mode.  Using this the daemon will not
+.BR fork (2)
+to put itself in the background or redirect its output to a log file.
+Instead all output will go to the terminal.
+.TP
+.B "\-r"
+Turns on pseudo-random base node assignment.  Rather than using a
+default base node of 0, a random base node number will be assigned.
+This is particularly useful for groups creating large numbers of small
+to medium sized files.
+.TP
+.BI "\-t " "timeout"
+Specifies the
+.BR select (2)
+loop timeout for the manager.  This determines how often the manager
+will sync with the I/O daemons in the absence of activity, and should
+not need to be set.
+
+.SH SIGNALS
+
+On receipt of a SIGHUP signal, the mgr daemon will restart itself after
+sending a signal to all I/O daemons to clear out any connections it has
+started.
+
+The manager will exit cleanly on receipt of SIGTERM.
+
+.SH SEE ALSO
+.BR iod (8)
+
+.SH AUTHORS
+Rob Ross, Clemson University
+
+.SH BUGS
+Sure.

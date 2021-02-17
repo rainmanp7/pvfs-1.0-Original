@@ -1,0 +1,48 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+# The next two lines keep make from checking wacked out implicit rules
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+CFLAGS  = -I. -I ../include @CFLAGS@
+CC = @CC@
+
+OBJS= llist.o sockio.o sockset.o unix-stats.o check_pvfs.o resv_name.o dfd_set.o
+
+STOBJS= ../lib/obj_static/llist.o \
+	../lib/obj_static/sockio.o \
+	../lib/obj_static/sockset.o \
+	../lib/obj_static/unix-stats.o \
+	../lib/obj_static/check_pvfs.o \
+	../lib/obj_static/resv_name.o \
+	../lib/obj_static/dfd_set.o
+
+SHOBJS= ../lib/obj_shared/llist.os \
+	../lib/obj_shared/sockio.os \
+	../lib/obj_shared/sockset.os \
+	../lib/obj_shared/unix-stats.os \
+	../lib/obj_shared/check_pvfs.os \
+	../lib/obj_shared/resv_name.os \
+	../lib/obj_shared/dfd_set.os
+
+all : $(STOBJS) $(OBJS)
+
+obj_static : $(STOBJS)
+
+obj_shared : $(SHOBJS)
+
+../lib/obj_static/%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+../lib/obj_shared/%.os: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean::
+	rm -rf $(STOBJS) $(SHOBJS) $(OBJS)
+
+#### DEPENDENCIES ####
+llist.o : llist.h
+sockio.o : sockio.h ../include/debug.h
+dfd_set.o: dfd_set.h
+sockset.o : sockset.h

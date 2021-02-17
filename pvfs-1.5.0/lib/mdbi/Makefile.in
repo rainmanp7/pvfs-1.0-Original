@@ -1,0 +1,42 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+CFLAGS= @CFLAGS@ -I../../include 
+CC = @CC@
+
+STOBJS=	../obj_static/read_blk.o ../obj_static/write_blk.o \
+	../obj_static/set_blk.o ../obj_static/buf_blk.o \
+	../obj_static/open_blk.o ../obj_static/close_blk.o \
+	../obj_static/fsync_blk.o
+
+SHOBJS= ../obj_shared/read_blk.o ../obj_shared/write_blk.o \
+	../obj_shared/set_blk.o ../obj_shared/buf_blk.o \
+	../obj_shared/open_blk.o ../obj_shared/close_blk.o \
+	../obj_shared/fsync_blk.o
+
+all : $(STOBJS) $(SHOBJS)
+
+obj_static : $(STOBJS)
+
+obj_shared : $(SHOBJS)
+
+../obj_static/%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+../obj_shared/%.o : %.c
+	$(CC) $(CFLAGS) -c -fPIC $< -o $@
+
+clean ::
+	rm -rf $(STOBJS) $(SHOBJS)
+
+rcsclean ::
+	rcsclean
+
+checkout::
+	co -q RCS/*
+
+#### DEPENDENCIES ####
+$(STOBJS): blocks.h
+../obj_static/write_blk.o : read_blk.c
+$(SHOBJS): blocks.h
+../obj_shared/write_blk.o : read_blk.c
